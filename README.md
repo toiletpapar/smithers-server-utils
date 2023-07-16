@@ -7,4 +7,4 @@ Common Utilities used across the Smithers Application
 `npm pack`
 
 ### Publishing
-`npm publish --access public`
+`npm publish`
