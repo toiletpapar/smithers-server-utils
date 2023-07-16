@@ -1,0 +1,34 @@
+{
+  "name": "@ca-tyler/smithers-server-utils",
+  "version": "1.0.0",
+  "description": "Common Utilities used across the Smithers Application",
+  "main": "./build/utils.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toiletpapar/smithers-server-utils.git"
+  },
+  "author": "Tyler Poon",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/toiletpapar/smithers-server-utils/issues"
+  },
+  "homepage": "https://github.com/toiletpapar/smithers-server-utils#readme",
+  "devDependencies": {
+    "@types/connect-pg-simple": "^7.0.0",
+    "@types/pg": "^8.6.5",
+    "@typescript-eslint/eslint-plugin": "^5.46.0",
+    "@typescript-eslint/parser": "^5.46.0",
+    "eslint": "^8.29.0",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@google-cloud/secret-manager": "^4.2.2",
+    "async-mutex": "^0.4.0",
+    "connect-pg-simple": "^9.0.0",
+    "pg": "^8.8.0"
+  }
+}
