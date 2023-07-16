@@ -29,6 +29,7 @@
     "@google-cloud/secret-manager": "^4.2.2",
     "async-mutex": "^0.4.0",
     "connect-pg-simple": "^9.0.0",
-    "pg": "^8.8.0"
+    "pg": "^8.8.0",
+    "yup": "^1.2.0"
   }
 }
