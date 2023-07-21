@@ -1,14 +1,14 @@
 import { object, number, array, string } from 'yup'
 
 interface ICrawlTargetListOptions {
-  userId: number;
+  userId?: number;
 }
 
 class CrawlTargetListOptions {
   private data: ICrawlTargetListOptions;
   static allProperties: (keyof ICrawlTargetListOptions)[] = ['userId']
   private static propertiesSchema = array().of(string().oneOf(this.allProperties).defined()).defined().strict(true)
-  private static dataSchema = object({
+  private static requestSchema = object({
     userId: number().required(),
   }).noUnknown().strict(true)
 
@@ -30,7 +30,7 @@ class CrawlTargetListOptions {
     const validatedProperties = await this.propertiesSchema.validate(properties)
 
     // Validate the data against the specified properties, erroring on any unidentified properties
-    const validationSchema = this.dataSchema.pick(validatedProperties).strict(strict)
+    const validationSchema = this.requestSchema.pick(validatedProperties).strict(strict)
     const validatedData = await validationSchema.validate(data, {abortEarly: false})
 
     return validatedData

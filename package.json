@@ -1,10 +1,11 @@
 {
   "name": "@ca-tyler/smithers-server-utils",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Common Utilities used across the Smithers Application",
   "main": "./build/utils.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "tsc -w",
     "build": "tsc"
   },
   "repository": {

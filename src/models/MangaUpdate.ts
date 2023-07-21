@@ -16,7 +16,7 @@ class MangaUpdate {
   private data: IMangaUpdate;
   static allProperties: (keyof IMangaUpdate)[] = ['mangaUpdateId', 'crawlId', 'crawledOn', 'chapter', 'chapterName', 'isRead', 'readAt']
   private static propertiesSchema = array().of(string().oneOf(this.allProperties).defined()).defined().strict(true)
-  private static dataSchema = object({
+  private static requestSchema = object({
     mangaUpdateId: number().required(),
     crawlId: number().required(),
     crawledOn: string().required().test('is-iso8601', 'Value must be in ISO8601 format', isISO8601),
@@ -62,7 +62,7 @@ class MangaUpdate {
     const validatedProperties = await this.propertiesSchema.validate(properties)
 
     // Validate the data against the specified properties, erroring on any unidentified properties
-    const validationSchema = this.dataSchema.pick(validatedProperties).strict(strict)
+    const validationSchema = this.requestSchema.pick(validatedProperties).strict(strict)
     const validatedData = await validationSchema.validate(data, {abortEarly: false})
     const coercedData: Partial<IMangaUpdate> = {}
 
