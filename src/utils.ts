@@ -9,6 +9,10 @@ import { MangaUpdate, IMangaUpdate } from "./models/MangaUpdate"
 import { MangaUpdateListOptions, IMangaUpdateListOptions } from "./models/MangaUpdateListOptions"
 import { SQLMangaUpdate, MangaUpdateRepository } from "./repositories/MangaUpdateRepository"
 
+import { Manga } from "./models/Manga"
+import { MangaListOptions, IMangaListOptions } from "./models/MangaListOptions"
+import { SQLManga, MangaRepository } from "./repositories/MangaRepository"
+
 export {
   Database,
   SecretClient,
@@ -28,5 +32,12 @@ export {
   MangaUpdateListOptions,
   IMangaUpdateListOptions,
   SQLMangaUpdate,
-  MangaUpdateRepository
+  MangaUpdateRepository,
+
+  // Manga
+  Manga,
+  MangaListOptions,
+  IMangaListOptions,
+  SQLManga,
+  MangaRepository
 }
