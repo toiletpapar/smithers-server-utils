@@ -1,25 +1,25 @@
 import { object, number, array, string } from 'yup'
 
-interface IMangaUpdateListOptions {
+interface ICrawlTargetGetOptions {
   userId?: number;
   crawlTargetId?: number;
 }
 
-class MangaUpdateListOptions {
-  private data: IMangaUpdateListOptions;
-  static allProperties: (keyof IMangaUpdateListOptions)[] = ['userId', 'crawlTargetId']
-  private static propertiesSchema = array().of(string().oneOf(this.allProperties).defined()).defined().strict(true)
+class CrawlTargetGetOptions {
+  private data: ICrawlTargetGetOptions;
+  static allRequestProperties: (keyof ICrawlTargetGetOptions)[] = ['userId', 'crawlTargetId']
+  private static propertiesRequestSchema = array().of(string().oneOf(this.allRequestProperties).defined()).defined().strict(true)
   private static requestSchema = object({
     userId: number().required(),
-    crawlTargetId: number().optional()
+    crawlTargetId: number().required()
   }).noUnknown().strict(true)
 
-  public constructor(data: IMangaUpdateListOptions) {
+  public constructor(data: ICrawlTargetGetOptions) {
     this.data = data
   }
 
   public static async fromRequest(data: any) {
-    const result = (await this.validateRequest(data, this.allProperties)) as IMangaUpdateListOptions
+    const result = (await this.validateRequest(data, this.allRequestProperties)) as ICrawlTargetGetOptions
 
     return new this({
       userId: result.userId
@@ -27,9 +27,9 @@ class MangaUpdateListOptions {
   }
 
   // Validates the provided data against the properties specified, returning a coerced partial object
-  public static async validateRequest(data: any, properties: string[], strict: boolean = true): Promise<Partial<IMangaUpdateListOptions>> {
+  public static async validateRequest(data: any, properties: string[], strict: boolean = true): Promise<Partial<ICrawlTargetGetOptions>> {
     // Validate properties provided by the request
-    const validatedProperties = await this.propertiesSchema.validate(properties)
+    const validatedProperties = await this.propertiesRequestSchema.validate(properties)
 
     // Validate the data against the specified properties, erroring on any unidentified properties
     const validationSchema = this.requestSchema.pick(validatedProperties).strict(strict)
@@ -38,7 +38,7 @@ class MangaUpdateListOptions {
     return validatedData
   }
 
-  public getObject(): IMangaUpdateListOptions {
+  public getObject(): ICrawlTargetGetOptions {
     return {
       ...this.data
     }
@@ -46,6 +46,6 @@ class MangaUpdateListOptions {
 }
 
 export {
-  MangaUpdateListOptions,
-  IMangaUpdateListOptions,
+  CrawlTargetGetOptions,
+  ICrawlTargetGetOptions,
 }

@@ -29,7 +29,10 @@
   "dependencies": {
     "@google-cloud/secret-manager": "^4.2.2",
     "async-mutex": "^0.4.0",
+    "axios": "^1.4.0",
+    "bottleneck": "^2.19.5",
     "connect-pg-simple": "^9.0.0",
+    "node-html-parser": "^6.1.5",
     "pg": "^8.8.0",
     "yup": "^1.2.0"
   }

@@ -1,6 +1,6 @@
 import { object, string, boolean, number, array } from 'yup'
-import { isISO8601 } from '../utils/isISO8601'
-import { SQLMangaUpdate } from '../repositories/MangaUpdateRepository';
+import { isISO8601 } from '../../utils/isISO8601'
+import { SQLMangaUpdate } from '../../repositories/manga/MangaUpdateRepository';
 
 interface IMangaUpdate {
   mangaUpdateId: number; // identifier, primary
@@ -14,8 +14,8 @@ interface IMangaUpdate {
 
 class MangaUpdate {
   private data: IMangaUpdate;
-  static allProperties: (keyof IMangaUpdate)[] = ['mangaUpdateId', 'crawlId', 'crawledOn', 'chapter', 'chapterName', 'isRead', 'readAt']
-  private static propertiesSchema = array().of(string().oneOf(this.allProperties).defined()).defined().strict(true)
+  static allRequestProperties: (keyof IMangaUpdate)[] = ['mangaUpdateId', 'crawlId', 'crawledOn', 'chapter', 'chapterName', 'isRead', 'readAt']
+  private static propertiesRequestSchema = array().of(string().oneOf(this.allRequestProperties).defined()).defined().strict(true)
   private static requestSchema = object({
     mangaUpdateId: number().required(),
     crawlId: number().required(),
@@ -43,7 +43,7 @@ class MangaUpdate {
   }
 
   public static async fromRequest(data: any) {
-    const result = (await this.validateRequest(data, this.allProperties)) as IMangaUpdate
+    const result = (await this.validateRequest(data, this.allRequestProperties)) as IMangaUpdate
 
     return new this({
       mangaUpdateId: result.mangaUpdateId,
@@ -59,7 +59,7 @@ class MangaUpdate {
   // Validates the provided data against the properties specified, returning a coerced partial object
   public static async validateRequest(data: any, properties: string[], strict: boolean = true): Promise<Partial<IMangaUpdate>> {
     // Validate properties provided by the request
-    const validatedProperties = await this.propertiesSchema.validate(properties)
+    const validatedProperties = await this.propertiesRequestSchema.validate(properties)
 
     // Validate the data against the specified properties, erroring on any unidentified properties
     const validationSchema = this.requestSchema.pick(validatedProperties).strict(strict)

@@ -2,6 +2,7 @@ import { QueryResult } from 'pg'
 import { Database } from '../database/Database'
 import { CrawlTarget, CrawlerTypes, ICrawlTarget } from '../models/CrawlTarget'
 import { CrawlTargetListOptions } from '../models/CrawlTargetListOptions';
+import { CrawlTargetGetOptions } from '../models/CrawlTargetGetOptions';
 
 interface SQLCrawlTarget {
   crawl_target_id: number;
@@ -61,6 +62,49 @@ namespace CrawlTargetRepository {
     return result.rows.map((row) => {
       return CrawlTarget.fromSQL(row)
     })
+  }
+
+  export const getById = async(db: Database, opts: CrawlTargetGetOptions) => {
+    const optsData = opts.getObject()
+    let values: any[] = []
+    let where = ''
+
+    if (optsData.userId) {
+      values = [
+        ...values,
+        optsData.userId
+      ]
+
+      if (values.length === 1) {
+        where = ` WHERE user_id = $${values.length.toString()}`
+      } else {
+        where = `${where} AND user_id = $${values.length.toString()}`
+      }
+    }
+
+    if (optsData.crawlTargetId) {
+      values = [
+        ...values,
+        optsData.crawlTargetId
+      ]
+
+      if (values.length === 1) {
+        where = ` WHERE crawl_target_id = $${values.length.toString()}`
+      } else {
+        where = `${where} AND crawl_target_id = $${values.length.toString()}`
+      }
+    }
+
+    const result: QueryResult<SQLCrawlTarget> = await db.query({
+      text: `SELECT * FROM crawl_target${where};`,
+      values
+    })
+  
+    if (result.rows[0]) {
+      return CrawlTarget.fromSQL(result.rows[0])
+    } else {
+      return null
+    }
   }
   
   export const insert = async (db: Database, crawlTarget: Omit<ICrawlTarget, 'crawlTargetId'>): Promise<CrawlTarget> => {

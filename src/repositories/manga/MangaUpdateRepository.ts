@@ -1,7 +1,7 @@
 import { QueryResult } from 'pg'
-import { Database } from '../database/Database'
-import { IMangaUpdate, MangaUpdate } from '../models/MangaUpdate';
-import { MangaUpdateListOptions } from '../models/MangaUpdateListOptions';
+import { Database } from '../../database/Database'
+import { IMangaUpdate, MangaUpdate } from '../../models/manga/MangaUpdate';
+import { MangaUpdateListOptions } from '../../models/manga/MangaUpdateListOptions';
 
 interface SQLMangaUpdate {
   manga_update_id: number;

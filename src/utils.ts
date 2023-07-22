@@ -5,13 +5,15 @@ import { CrawlTarget, CrawlerTypes, ICrawlTarget } from "./models/CrawlTarget"
 import { CrawlTargetListOptions, ICrawlTargetListOptions } from "./models/CrawlTargetListOptions"
 import { SQLCrawlTarget, CrawlTargetRepository } from "./repositories/CrawlTargetRepository"
 
-import { MangaUpdate, IMangaUpdate } from "./models/MangaUpdate"
-import { MangaUpdateListOptions, IMangaUpdateListOptions } from "./models/MangaUpdateListOptions"
-import { SQLMangaUpdate, MangaUpdateRepository } from "./repositories/MangaUpdateRepository"
+import { MangaUpdate, IMangaUpdate } from "./models/manga/MangaUpdate"
+import { MangaUpdateListOptions, IMangaUpdateListOptions } from "./models/manga/MangaUpdateListOptions"
+import { SQLMangaUpdate, MangaUpdateRepository } from "./repositories/manga/MangaUpdateRepository"
 
-import { Manga } from "./models/Manga"
-import { MangaListOptions, IMangaListOptions } from "./models/MangaListOptions"
-import { SQLManga, MangaRepository } from "./repositories/MangaRepository"
+import { Manga } from "./models/manga/Manga"
+import { MangaListOptions, IMangaListOptions } from "./models/manga/MangaListOptions"
+import { SQLManga, MangaRepository } from "./repositories/manga/MangaRepository"
+import { MangaSyncOptions, IMangaSyncOptions } from "./models/manga/MangaSyncOptions"
+import { CrawlTargetGetOptions, ICrawlTargetGetOptions } from "./models/CrawlTargetGetOptions"
 
 export {
   Database,
@@ -23,6 +25,8 @@ export {
   ICrawlTarget,
   CrawlTargetListOptions,
   ICrawlTargetListOptions,
+  CrawlTargetGetOptions,
+  ICrawlTargetGetOptions,
   SQLCrawlTarget,
   CrawlTargetRepository,
 
@@ -38,6 +42,8 @@ export {
   Manga,
   MangaListOptions,
   IMangaListOptions,
+  MangaSyncOptions,
+  IMangaSyncOptions,
   SQLManga,
   MangaRepository
 }

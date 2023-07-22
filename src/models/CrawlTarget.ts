@@ -19,8 +19,8 @@ interface ICrawlTarget {
 
 class CrawlTarget {
   private data: ICrawlTarget;
-  static allProperties: (keyof ICrawlTarget)[] = ['crawlTargetId', 'name', 'url', 'adapter', 'lastCrawledOn', 'crawlSuccess', 'userId']
-  private static propertiesSchema = array().of(string().oneOf(this.allProperties).defined()).defined().strict(true)
+  static allRequestProperties: (keyof ICrawlTarget)[] = ['crawlTargetId', 'name', 'url', 'adapter', 'lastCrawledOn', 'crawlSuccess', 'userId']
+  private static propertiesRequestSchema = array().of(string().oneOf(this.allRequestProperties).defined()).defined().strict(true)
   private static requestSchema = object({
     crawlTargetId: number().required(),
     name: string().max(100).required(),
@@ -48,7 +48,7 @@ class CrawlTarget {
   }
 
   public static async fromRequest(data: any) {
-    const result = (await this.validateRequest(data, this.allProperties)) as ICrawlTarget
+    const result = (await this.validateRequest(data, this.allRequestProperties)) as ICrawlTarget
 
     return new this({
       crawlTargetId: result.crawlTargetId,
@@ -63,7 +63,7 @@ class CrawlTarget {
 
   public static async validateRequest(data: any, properties: string[], strict: boolean = true): Promise<Partial<ICrawlTarget>> {
     // Validate properties provided by the request
-    const validatedProperties = await this.propertiesSchema.validate(properties)
+    const validatedProperties = await this.propertiesRequestSchema.validate(properties)
 
     // Validate the data against the specified properties, erroring on any unidentified properties
     const validationSchema = this.requestSchema.pick(validatedProperties).strict(strict)

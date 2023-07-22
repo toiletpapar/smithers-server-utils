@@ -1,9 +1,14 @@
 import { QueryResult } from "pg";
-import { SQLCrawlTarget } from "../repositories/CrawlTargetRepository";
-import { SQLMangaUpdate } from "../repositories/MangaUpdateRepository";
-import { Database } from "../database/Database";
-import { Manga } from "../models/Manga";
-import { MangaListOptions } from "../models/MangaListOptions";
+import { CrawlTargetRepository, SQLCrawlTarget } from "../CrawlTargetRepository"
+import { SQLMangaUpdate } from "./MangaUpdateRepository"
+import { Database } from "../../database/Database"
+import { Manga } from "../../models/manga/Manga"
+import { MangaListOptions } from "../../models/manga/MangaListOptions"
+import { MangaSyncOptions } from "../../models/manga/MangaSyncOptions";
+import { CrawlTargetListOptions } from "../../models/CrawlTargetListOptions";
+import { CrawlTarget } from "../../models/CrawlTarget";
+import { CrawlTargetGetOptions } from "../../models/CrawlTargetGetOptions";
+import { mangaSync } from "./mangaSync";
 
 // Manga - Represented in SQL
 interface SQLManga {
@@ -12,9 +17,7 @@ interface SQLManga {
 }
 
 namespace MangaRepository {
-  export const list = async (opts: MangaListOptions): Promise<Manga[]> => {
-    const db = await Database.getInstance()
-  
+  export const list = async (db: Database, opts: MangaListOptions): Promise<Manga[]> => {
     let results: QueryResult<SQLManga>
   
     // TODO: Stored Procedures
@@ -110,6 +113,46 @@ namespace MangaRepository {
         })
       })
     })
+  }
+
+  export const syncManga = async (db: Database, opts: MangaSyncOptions): Promise<void> => {
+    let crawlTargets: CrawlTarget[] = []
+    const optsData = opts.getObject()
+
+    // Retreive from db what is supposed to be crawled
+    if (optsData.crawlTargetId && optsData.userId) {
+      const crawlTarget = await CrawlTargetRepository.getById(db, new CrawlTargetGetOptions({}))
+
+      if (!crawlTarget) {
+        const err = new Error("Unable to find crawler to sync from")
+
+        throw err
+      } else {
+        crawlTargets = [crawlTarget]
+      }
+    } else {
+      crawlTargets = await CrawlTargetRepository.list(db, new CrawlTargetListOptions({}))
+    }
+
+    const results = await mangaSync(db, crawlTargets, optsData.webtoonLimiter, optsData.mangadexLimiter, optsData.psqlLimiter)
+
+    await Promise.all(results.reduce((acc: Promise<any>[], result) => {
+      if (result.status === 'rejected' && result.reason.smithersContext) {
+        console.error(result.reason)
+
+        return [
+          ...acc,
+          CrawlTargetRepository.update(db, result.reason.smithersContext.getObject().crawlTargetId, {crawlSuccess: false, lastCrawledOn: new Date()})
+        ]
+      } else if (result.status === 'rejected') {
+        console.error(result.reason)
+        return acc
+      } else {
+        return acc
+      }
+    }, []))
+
+    return
   }
 }
 

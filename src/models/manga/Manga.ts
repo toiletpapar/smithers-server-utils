@@ -1,6 +1,6 @@
-import { CrawlTarget, ICrawlTarget } from "./CrawlTarget";
+import { CrawlTarget, ICrawlTarget } from "../CrawlTarget";
 import { MangaUpdate, IMangaUpdate } from "./MangaUpdate";
-import { SQLManga } from "../repositories/MangaRepository";
+import { SQLManga } from "../../repositories/manga/MangaRepository";
 
 // Manga - Internal Data
 interface MangaData {

@@ -1,5 +1,5 @@
 import { object, string, array, number } from 'yup'
-import { decodeBoolean } from '../utils/decodeQuery';
+import { decodeBoolean } from '../../utils/decodeQuery';
 
 interface IMangaListOptions {
   onlyLatest: boolean;
@@ -8,9 +8,9 @@ interface IMangaListOptions {
 
 class MangaListOptions {
   private data: IMangaListOptions;
-  static allProperties: (keyof IMangaListOptions)[] = ['onlyLatest', 'userId']
-  private static propertiesSchema = array().of(string().oneOf(this.allProperties).defined()).defined().strict(true)
-  private static dataSchema = object({
+  static allRequestProperties: (keyof IMangaListOptions)[] = ['onlyLatest', 'userId']
+  private static propertiesRequestSchema = array().of(string().oneOf(this.allRequestProperties).defined()).defined().strict(true)
+  private static requestSchema = object({
     onlyLatest: string().oneOf(['true', 'false']).optional(),
     userId: number().required()
   }).noUnknown().strict(true)
@@ -20,7 +20,7 @@ class MangaListOptions {
   }
 
   public static async fromRequest(data: any) {
-    const result = (await this.validateRequest(data, this.allProperties)) as IMangaListOptions
+    const result = (await this.validateRequest(data, this.allRequestProperties)) as IMangaListOptions
 
     return new this({
       onlyLatest: result.onlyLatest,
@@ -31,10 +31,10 @@ class MangaListOptions {
   // Validates the provided data against the properties specified, returning a coerced partial object
   public static async validateRequest(data: any, properties: string[], strict: boolean = true): Promise<Partial<IMangaListOptions>> {
     // Validate properties provided by the request
-    const validatedProperties = await this.propertiesSchema.validate(properties)
+    const validatedProperties = await this.propertiesRequestSchema.validate(properties)
 
     // Validate the data against the specified properties, erroring on any unidentified properties
-    const validationSchema = this.dataSchema.pick(validatedProperties).strict(strict)
+    const validationSchema = this.requestSchema.pick(validatedProperties).strict(strict)
     const validatedData = await validationSchema.validate(data, {abortEarly: false})
     const coercedData: Partial<IMangaListOptions> = {}
 
