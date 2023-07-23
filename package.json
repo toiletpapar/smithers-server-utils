@@ -1,6 +1,6 @@
 {
   "name": "@ca-tyler/smithers-server-utils",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Common Utilities used across the Smithers Application",
   "main": "./build/utils.js",
   "scripts": {
@@ -33,7 +33,7 @@
     "bottleneck": "^2.19.5",
     "connect-pg-simple": "^9.0.0",
     "node-html-parser": "^6.1.5",
-    "pg": "^8.8.0",
+    "pg": "^8.11.1",
     "yup": "^1.2.0"
   }
 }

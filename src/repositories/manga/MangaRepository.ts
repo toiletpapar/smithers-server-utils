@@ -122,7 +122,7 @@ namespace MangaRepository {
 
     // Retreive from db what is supposed to be crawled
     if (optsData.crawlTargetId && optsData.userId) {
-      const crawlTarget = await CrawlTargetRepository.getById(db, new CrawlTargetGetOptions({}))
+      const crawlTarget = await CrawlTargetRepository.getById(db, new CrawlTargetGetOptions({crawlTargetId: optsData.crawlTargetId, userId: optsData.userId}))
 
       if (!crawlTarget) {
         throw new SmithersError(SmithersErrorTypes.MANGA_CRAWL_TARGET_NOT_FOUND, 'Unable to find crawler to sync from', {crawlTargetId: optsData.crawlTargetId, userId: optsData.userId})

@@ -15,7 +15,7 @@ interface SQLMangaUpdate {
 }
 
 namespace MangaUpdateRepository {
-  const getSQLKey = (appKey: keyof IMangaUpdate): keyof SQLMangaUpdate => {
+  const getSQLKey = (appKey: keyof IMangaUpdate, prefix?: string): keyof SQLMangaUpdate => {
     switch(appKey) {
       case 'mangaUpdateId':
         return 'manga_update_id'
@@ -106,16 +106,30 @@ namespace MangaUpdateRepository {
     return MangaUpdate.fromSQL(result.rows[0])
   }
 
-  export const update = async (db: Database, mangaUpdateId: number, mangaUpdate: Partial<Omit<IMangaUpdate, 'mangaUpdateId' | 'crawlId' | 'chapter'>>): Promise<MangaUpdate | null> => {
+  export const update = async (
+    db: Database,
+    mangaUpdateId: number,
+    mangaUpdate: Partial<Omit<IMangaUpdate, 'mangaUpdateId' | 'crawlId' | 'chapter'>>,
+    userId?: number
+  ): Promise<MangaUpdate | null> => {
     const entries = Object.entries(mangaUpdate)
 
     if (entries.length === 0) {
       throw new SmithersError(SmithersErrorTypes.MANGA_UPDATE_UPDATE_AT_LEAST_ONE_PROPERTY, 'Must update at least one property', {mangaUpdateId})
     }
+
+    let values = [...entries.map(([key, value]) => value), mangaUpdateId]
+
+    if (userId) {
+      values = [
+        ...values,
+        userId
+      ]
+    }
   
     const result: QueryResult<SQLMangaUpdate> = await db.query({
       text: `
-        UPDATE manga_update
+        UPDATE manga_update mu
         SET
           ${
             entries.reduce((acc, [key, value], index) => {
@@ -128,11 +142,21 @@ namespace MangaUpdateRepository {
               return sql
             },'')
           }
+        ${
+          !userId ? '' : `
+            FROM
+              crawl_target ct
+          `
+        }
         WHERE
           manga_update_id = $${entries.length + 1}
+          ${!userId ? '' : `
+            AND mu.crawl_target_id = ct.crawl_target_id
+            AND ct.user_id = $${entries.length + 2}
+          `}
         RETURNING *;
       `,
-      values: [...entries.map(([key, value]) => value), mangaUpdateId]
+      values
     })
   
     if (result.rows.length === 0) {
