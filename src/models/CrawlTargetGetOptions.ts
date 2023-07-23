@@ -12,14 +12,14 @@ class CrawlTargetGetOptions {
   private static requestSchema = object({
     userId: number().required(),
     crawlTargetId: number().required()
-  }).noUnknown().strict(true)
+  }).noUnknown()
 
   public constructor(data: ICrawlTargetGetOptions) {
     this.data = data
   }
 
-  public static async fromRequest(data: any) {
-    const result = (await this.validateRequest(data, this.allRequestProperties)) as ICrawlTargetGetOptions
+  public static async fromRequest(data: any, strict: boolean = true) {
+    const result = (await this.validateRequest(data, this.allRequestProperties, strict)) as ICrawlTargetGetOptions
 
     return new this({
       userId: result.userId

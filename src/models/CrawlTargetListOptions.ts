@@ -10,14 +10,14 @@ class CrawlTargetListOptions {
   private static propertiesRequestSchema = array().of(string().oneOf(this.allRequestProperties).defined()).defined().strict(true)
   private static requestSchema = object({
     userId: number().required(),
-  }).noUnknown().strict(true)
+  }).noUnknown()
 
   public constructor(data: ICrawlTargetListOptions) {
     this.data = data
   }
 
-  public static async fromRequest(data: any) {
-    const result = (await this.validateRequest(data, this.allRequestProperties)) as ICrawlTargetListOptions
+  public static async fromRequest(data: any, strict: boolean = true) {
+    const result = (await this.validateRequest(data, this.allRequestProperties, strict)) as ICrawlTargetListOptions
 
     return new this({
       userId: result.userId

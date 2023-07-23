@@ -30,8 +30,8 @@ class MangaSyncOptions {
     }
   }
 
-  public static async fromRequest(data: any): Promise<MangaSyncOptions> {
-    const result = (await this.validateRequest(data, this.allRequestProperties)) as IRequestMangaSyncOptions
+  public static async fromRequest(data: any, strict: boolean = true): Promise<MangaSyncOptions> {
+    const result = (await this.validateRequest(data, this.allRequestProperties, strict)) as IRequestMangaSyncOptions
 
     return new this({
       crawlTargetId: result.crawlTargetId,

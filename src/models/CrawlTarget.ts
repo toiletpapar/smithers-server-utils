@@ -47,8 +47,8 @@ class CrawlTarget {
     })
   }
 
-  public static async fromRequest(data: any) {
-    const result = (await this.validateRequest(data, this.allRequestProperties)) as ICrawlTarget
+  public static async fromRequest(data: any, strict: boolean = true) {
+    const result = (await this.validateRequest(data, this.allRequestProperties, strict)) as ICrawlTarget
 
     return new this({
       crawlTargetId: result.crawlTargetId,

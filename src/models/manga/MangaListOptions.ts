@@ -13,14 +13,14 @@ class MangaListOptions {
   private static requestSchema = object({
     onlyLatest: string().oneOf(['true', 'false']).optional(),
     userId: number().required()
-  }).noUnknown().strict(true)
+  }).noUnknown()
 
   public constructor(data: IMangaListOptions) {
     this.data = data
   }
 
-  public static async fromRequest(data: any) {
-    const result = (await this.validateRequest(data, this.allRequestProperties)) as IMangaListOptions
+  public static async fromRequest(data: any, strict: boolean = true) {
+    const result = (await this.validateRequest(data, this.allRequestProperties, strict)) as IMangaListOptions
 
     return new this({
       onlyLatest: result.onlyLatest,

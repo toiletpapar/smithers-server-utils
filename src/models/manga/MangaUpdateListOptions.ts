@@ -12,14 +12,14 @@ class MangaUpdateListOptions {
   private static requestSchema = object({
     userId: number().required(),
     crawlTargetId: number().optional()
-  }).noUnknown().strict(true)
+  }).noUnknown()
 
   public constructor(data: IMangaUpdateListOptions) {
     this.data = data
   }
 
-  public static async fromRequest(data: any) {
-    const result = (await this.validateRequest(data, this.allRequestProperties)) as IMangaUpdateListOptions
+  public static async fromRequest(data: any, strict: boolean = true) {
+    const result = (await this.validateRequest(data, this.allRequestProperties, strict)) as IMangaUpdateListOptions
 
     return new this({
       userId: result.userId

@@ -42,8 +42,8 @@ class MangaUpdate {
     })
   }
 
-  public static async fromRequest(data: any) {
-    const result = (await this.validateRequest(data, this.allRequestProperties)) as IMangaUpdate
+  public static async fromRequest(data: any, strict: boolean = true) {
+    const result = (await this.validateRequest(data, this.allRequestProperties, strict)) as IMangaUpdate
 
     return new this({
       mangaUpdateId: result.mangaUpdateId,
