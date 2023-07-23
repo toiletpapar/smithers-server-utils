@@ -25,7 +25,8 @@ class MangaUpdateListOptions {
     const result = (await this.validateRequest(data, this.allRequestProperties, strict)) as IMangaUpdateListOptions
 
     return new this({
-      userId: result.userId
+      userId: result.userId,
+      crawlTargetId: result.crawlTargetId
     })
   }
 
