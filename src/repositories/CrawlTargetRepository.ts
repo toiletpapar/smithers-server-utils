@@ -126,11 +126,25 @@ namespace CrawlTargetRepository {
     return CrawlTarget.fromSQL(result.rows[0])
   }
 
-  export const update = async (db: Database, crawlTargetId: number, crawlTarget: Partial<Omit<ICrawlTarget, 'crawlTargetId'>>): Promise<CrawlTarget | null> => {
+  export const update = async (
+    db: Database,
+    crawlTargetId: number,
+    crawlTarget: Partial<Omit<ICrawlTarget, 'crawlTargetId' | 'userId'>>,
+    userId?: number
+  ): Promise<CrawlTarget | null> => {
     const entries = Object.entries(crawlTarget)
 
     if (entries.length === 0) {
       throw new SmithersError(SmithersErrorTypes.CRAWL_TARGET_UPDATE_AT_LEAST_ONE_PROPERTY, 'Must update at least one property', {crawlTargetId})
+    }
+
+    let values = [...entries.map(([key, value]) => value), crawlTargetId]
+
+    if (userId) {
+      values = [
+        ...values,
+        userId
+      ]
     }
   
     const result: QueryResult<SQLCrawlTarget> = await db.query({
@@ -150,9 +164,12 @@ namespace CrawlTargetRepository {
           }
         WHERE
           crawl_target_id = $${entries.length + 1}
+          ${!userId ? '' : `
+            AND user_id = $${entries.length + 2}
+          `}
         RETURNING *;
       `,
-      values: [...entries.map(([key, value]) => value), crawlTargetId]
+      values
     })
   
     if (result.rows.length === 0) {

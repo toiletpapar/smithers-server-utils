@@ -7,12 +7,15 @@ interface ICrawlTargetGetOptions {
 
 class CrawlTargetGetOptions {
   private data: ICrawlTargetGetOptions;
-  static allRequestProperties: (keyof ICrawlTargetGetOptions)[] = ['userId', 'crawlTargetId']
-  private static propertiesRequestSchema = array().of(string().oneOf(this.allRequestProperties).defined()).defined().strict(true)
   private static requestSchema = object({
     userId: number().required(),
     crawlTargetId: number().required()
-  }).noUnknown()
+  }).noUnknown().defined("Data must be defined")
+
+  static allRequestProperties: (keyof ICrawlTargetGetOptions)[] = ['userId', 'crawlTargetId']
+  private static getPropertiesRequestSchema(validProperties: (keyof ICrawlTargetGetOptions)[]) {
+    return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
+  }
 
   public constructor(data: ICrawlTargetGetOptions) {
     this.data = data
@@ -27,9 +30,14 @@ class CrawlTargetGetOptions {
   }
 
   // Validates the provided data against the properties specified, returning a coerced partial object
-  public static async validateRequest(data: any, properties: string[], strict: boolean = true): Promise<Partial<ICrawlTargetGetOptions>> {
+  public static async validateRequest(
+    data: any,  // Data from the request
+    properties: any, // Properties from the request
+    strict: boolean = true,
+    validProperties: (keyof ICrawlTargetGetOptions)[] = this.allRequestProperties // Properties you accept from the request
+  ): Promise<Partial<ICrawlTargetGetOptions>> {
     // Validate properties provided by the request
-    const validatedProperties = await this.propertiesRequestSchema.validate(properties)
+    const validatedProperties = await this.getPropertiesRequestSchema(validProperties).validate(properties, {abortEarly: false})
 
     // Validate the data against the specified properties, erroring on any unidentified properties
     const validationSchema = this.requestSchema.pick(validatedProperties).strict(strict)

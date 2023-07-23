@@ -19,8 +19,6 @@ interface ICrawlTarget {
 
 class CrawlTarget {
   private data: ICrawlTarget;
-  static allRequestProperties: (keyof ICrawlTarget)[] = ['crawlTargetId', 'name', 'url', 'adapter', 'lastCrawledOn', 'crawlSuccess', 'userId']
-  private static propertiesRequestSchema = array().of(string().oneOf(this.allRequestProperties).defined()).defined().strict(true)
   private static requestSchema = object({
     crawlTargetId: number().required(),
     name: string().max(100).required(),
@@ -29,7 +27,12 @@ class CrawlTarget {
     lastCrawledOn: string().defined().nullable().test('is-iso8601', 'Value must be in ISO8601 format or null', (input) => input === null || isISO8601(input)),
     crawlSuccess: boolean().defined().nullable(),
     userId: number().required()
-  }).noUnknown()
+  }).noUnknown().defined("Data must be defined")
+
+  static allRequestProperties: (keyof ICrawlTarget)[] = ['crawlTargetId', 'name', 'url', 'adapter', 'lastCrawledOn', 'crawlSuccess', 'userId']
+  private static getPropertiesRequestSchema(validProperties: (keyof ICrawlTarget)[]) {
+    return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
+  }
 
   public constructor(data: ICrawlTarget) {
     this.data = data
@@ -61,9 +64,14 @@ class CrawlTarget {
     })
   }
 
-  public static async validateRequest(data: any, properties: string[], strict: boolean = true): Promise<Partial<ICrawlTarget>> {
+  public static async validateRequest(
+    data: any,  // Data from the request
+    properties: any, // Properties from the request
+    strict: boolean = true,
+    validProperties: (keyof ICrawlTarget)[] = this.allRequestProperties // Properties you accept from the request
+  ): Promise<Partial<ICrawlTarget>> {
     // Validate properties provided by the request
-    const validatedProperties = await this.propertiesRequestSchema.validate(properties)
+    const validatedProperties = await this.getPropertiesRequestSchema(validProperties).validate(properties, {abortEarly: false})
 
     // Validate the data against the specified properties, erroring on any unidentified properties
     const validationSchema = this.requestSchema.pick(validatedProperties).strict(strict)

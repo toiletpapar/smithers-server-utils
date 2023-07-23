@@ -14,12 +14,15 @@ interface IRequestMangaSyncOptions {
 
 class MangaSyncOptions {
   private data: IMangaSyncOptions;
-  static allRequestProperties: (keyof IRequestMangaSyncOptions)[] = ['crawlTargetId', 'userId']
-  private static propertiesRequestSchema = array().of(string().oneOf(this.allRequestProperties).defined()).defined().strict(true)
   private static requestSchema = object({
     crawlTargetId: number().required(),
     userId: number().required()
-  }).noUnknown()
+  }).noUnknown().defined("Data must be defined")
+
+  static allRequestProperties: (keyof IRequestMangaSyncOptions)[] = ['crawlTargetId', 'userId']
+  private static getPropertiesRequestSchema(validProperties: (keyof IRequestMangaSyncOptions)[]) {
+    return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
+  }
 
   public constructor(data: Partial<Omit<IMangaSyncOptions, 'userId' | 'crawlTargetId'>> & IRequestMangaSyncOptions) {
     this.data = {
@@ -40,9 +43,14 @@ class MangaSyncOptions {
   }
 
   // Validates the provided data against the properties specified, returning a coerced partial object
-  public static async validateRequest(data: any, properties: string[], strict: boolean = true): Promise<Partial<IRequestMangaSyncOptions>> {
+  public static async validateRequest(
+    data: any,  // Data from the request
+    properties: any, // Properties from the request
+    strict: boolean = true,
+    validProperties: (keyof IRequestMangaSyncOptions)[] = this.allRequestProperties // Properties you accept from the request
+  ): Promise<Partial<IRequestMangaSyncOptions>> {
     // Validate properties provided by the request
-    const validatedProperties = await this.propertiesRequestSchema.validate(properties)
+    const validatedProperties = await this.getPropertiesRequestSchema(validProperties).validate(properties, {abortEarly: false})
 
     // Validate the data against the specified properties, erroring on any unidentified properties
     const validationSchema = this.requestSchema.pick(validatedProperties).strict(strict)
