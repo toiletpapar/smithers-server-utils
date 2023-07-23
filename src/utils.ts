@@ -14,10 +14,13 @@ import { MangaListOptions, IMangaListOptions } from "./models/manga/MangaListOpt
 import { SQLManga, MangaRepository } from "./repositories/manga/MangaRepository"
 import { MangaSyncOptions, IMangaSyncOptions } from "./models/manga/MangaSyncOptions"
 import { CrawlTargetGetOptions, ICrawlTargetGetOptions } from "./models/CrawlTargetGetOptions"
+import { SmithersError, SmithersErrorTypes } from "./errors/SmithersError"
 
 export {
   Database,
   SecretClient,
+  SmithersError,
+  SmithersErrorTypes,
 
   // Crawler
   CrawlTarget,

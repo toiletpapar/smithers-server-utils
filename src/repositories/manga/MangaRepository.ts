@@ -9,6 +9,7 @@ import { CrawlTargetListOptions } from "../../models/CrawlTargetListOptions";
 import { CrawlTarget } from "../../models/CrawlTarget";
 import { CrawlTargetGetOptions } from "../../models/CrawlTargetGetOptions";
 import { mangaSync } from "./mangaSync";
+import { SmithersError, SmithersErrorTypes } from "../../errors/SmithersError";
 
 // Manga - Represented in SQL
 interface SQLManga {
@@ -124,9 +125,7 @@ namespace MangaRepository {
       const crawlTarget = await CrawlTargetRepository.getById(db, new CrawlTargetGetOptions({}))
 
       if (!crawlTarget) {
-        const err = new Error("Unable to find crawler to sync from")
-
-        throw err
+        throw new SmithersError(SmithersErrorTypes.MANGA_CRAWL_TARGET_NOT_FOUND, 'Unable to find crawler to sync from', {crawlTargetId: optsData.crawlTargetId, userId: optsData.userId})
       } else {
         crawlTargets = [crawlTarget]
       }

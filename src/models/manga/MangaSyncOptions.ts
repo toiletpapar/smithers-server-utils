@@ -19,7 +19,7 @@ class MangaSyncOptions {
   private static requestSchema = object({
     crawlTargetId: number().required(),
     userId: number().required()
-  }).noUnknown().strict(true)
+  }).noUnknown()
 
   public constructor(data: Partial<Omit<IMangaSyncOptions, 'userId' | 'crawlTargetId'>> & IRequestMangaSyncOptions) {
     this.data = {

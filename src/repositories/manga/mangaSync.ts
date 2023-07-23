@@ -8,6 +8,7 @@ import { IMangaUpdate, MangaUpdate } from "../../models/manga/MangaUpdate";
 import { scaleEquals } from "../../utils/float";
 import Bottleneck from "bottleneck";
 import { MangaUpdateListOptions } from "../../models/manga/MangaUpdateListOptions";
+import { SmithersError, SmithersErrorTypes } from "../../errors/SmithersError";
 
 const _isRelatedUpdate = (dbUpdate: MangaUpdate, update: Omit<IMangaUpdate, 'mangaUpdateId'>): boolean => {
   const data = dbUpdate.getObject()
@@ -103,9 +104,14 @@ const mangaSync = async (db: Database, crawlTargets: CrawlTarget[], webtoonLimit
   
         return
       } else {
-        throw new Error(`Unknown adapter ${crawlTarget.getObject().adapter} found for crawler ${crawlTarget.getObject().name}`)
+        throw new SmithersError(
+          SmithersErrorTypes.MANGA_CRAWL_TARGET_UNKNOWN_ADAPTER,
+          `Unknown adapter ${crawlTarget.getObject().adapter} found for crawler ${crawlTarget.getObject().name}`,
+          {crawlTarget}
+        )
       }
     } catch (err: any) {
+      // Override context
       err.smithersContext = crawlTarget
       return Promise.reject(err)
     }

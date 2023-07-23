@@ -1,3 +1,4 @@
+import { SmithersError, SmithersErrorTypes } from '../../errors/SmithersError'
 import { httpClient } from '../../httpClient/HttpClient'
 import { HTMLParser, HTMLElement } from '../../httpParser/HtmlParser'
 import { CrawlTarget } from '../../models/CrawlTarget'
@@ -14,7 +15,7 @@ const parseChapter = (el: HTMLElement): number => {
     return parseInt(trailingEpisodeEl.innerText.slice(1))
   }
 
-  throw new Error("Unable to parse chapter")
+  throw new SmithersError(SmithersErrorTypes.WEBTOON_CURSOR_UNPARSABLE_CHAPTER, 'Unable to parse chapter', {trailingEpisodeEl})
 }
 
 const parseChapterUrl = (el: HTMLElement): string => {
@@ -22,7 +23,7 @@ const parseChapterUrl = (el: HTMLElement): string => {
   const href = link?.getAttribute("href")
   
   if (!link || !href) {
-    throw new Error("Unable to get chapter link")
+    throw new SmithersError(SmithersErrorTypes.WEBTOON_CURSOR_UNPARSABLE_CHAPTER_LINK, 'Unable to get chapter link', {el})
   }
 
   return href
@@ -41,7 +42,7 @@ class WebtoonCursor implements Cursor {
     this.url.searchParams.set("page", "1")
     
     if (!this.url.searchParams.get("title_no")) {
-      throw new Error("Webtoon URL must contain a title_no query parameter")
+      throw new SmithersError(SmithersErrorTypes.WEBTOON_CURSOR_NO_TITLE, 'Webtoon URL must contain a title_no query parameter', {url: this.url})
     }
   }
 
@@ -51,7 +52,7 @@ class WebtoonCursor implements Cursor {
 
   async nextChapters(): Promise<Omit<IMangaUpdate, "mangaUpdateId">[]> {
     if (!this.url) {
-      throw new Error("Trying to get more chapters when no more pages are left")
+      throw new SmithersError(SmithersErrorTypes.WEBTOON_CURSOR_NO_MORE_CHAPTERS, 'Trying to get more chapters when no more pages are left')
     }
 
     console.log(`Retrieving chapters from ${this.url.toString()}`)

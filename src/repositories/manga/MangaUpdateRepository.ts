@@ -2,6 +2,7 @@ import { QueryResult } from 'pg'
 import { Database } from '../../database/Database'
 import { IMangaUpdate, MangaUpdate } from '../../models/manga/MangaUpdate';
 import { MangaUpdateListOptions } from '../../models/manga/MangaUpdateListOptions';
+import { SmithersError, SmithersErrorTypes } from '../../errors/SmithersError';
 
 interface SQLMangaUpdate {
   manga_update_id: number;
@@ -31,7 +32,7 @@ namespace MangaUpdateRepository {
       case 'readAt':
         return 'read_at'
       default:
-        throw new Error("Unknown appKey for MangaUpdate")
+        throw new SmithersError(SmithersErrorTypes.MANGA_UPDATE_UNKNOWN_APP_KEY, 'Unknown appKey for MangaUpdate')
     }
   }
 
@@ -109,7 +110,7 @@ namespace MangaUpdateRepository {
     const entries = Object.entries(mangaUpdate)
 
     if (entries.length === 0) {
-      throw new Error ("Must update at least one property")
+      throw new SmithersError(SmithersErrorTypes.MANGA_UPDATE_UPDATE_AT_LEAST_ONE_PROPERTY, 'Must update at least one property', {mangaUpdateId})
     }
   
     const result: QueryResult<SQLMangaUpdate> = await db.query({

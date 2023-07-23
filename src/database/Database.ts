@@ -2,6 +2,7 @@
 import { Pool, PoolClient, PoolConfig, QueryConfig, QueryResult, QueryResultRow } from 'pg'
 import { SecretClient } from '../secrets/SecretClient'
 import { Mutex } from 'async-mutex'
+import { SmithersError, SmithersErrorTypes } from '../errors/SmithersError'
 
 // Manage a single instance of a client in a pg pool
 class DatabaseClient {
@@ -36,7 +37,7 @@ class Database {
 
   public static async getInstance(): Promise<Database> {
     if (!process.env.DB_SECRET_NAME) {
-      throw new Error('DB secret name not provided')
+      throw new SmithersError(SmithersErrorTypes.DB_SECRET_NOT_FOUND, 'DB secret name not provided')
     }
 
     if (!Database.db) {
@@ -44,7 +45,7 @@ class Database {
       const connectionString = await client.getSecret({secretName: process.env.DB_SECRET_NAME})
 
       if (!connectionString) {
-        throw new Error('Unable to retrieve psql credentials')
+        throw new SmithersError(SmithersErrorTypes.DB_CONNECTION_NOT_FOUND, 'Unable to retrieve psql credentials')
       }
 
       const release = await Database.mutex.acquire()

@@ -3,6 +3,7 @@ import { MangadexApiFeedResponse } from '../../models/mangadex/MangadexApiRespon
 import { CrawlTarget } from '../../models/CrawlTarget'
 import { IMangaUpdate } from '../../models/manga/MangaUpdate'
 import { scaleRound } from '../../utils/float'
+import { SmithersError, SmithersErrorTypes } from '../../errors/SmithersError'
 
 class MangadexCursor implements Cursor {
   private crawlTarget: CrawlTarget
@@ -22,7 +23,7 @@ class MangadexCursor implements Cursor {
     const matches = this.crawlTarget.getObject().url.match(/\/title\/([^/]+)/)
 
     if (!matches || !matches[1]) {
-      throw new Error("Unable to identify mangadex id from url")
+      throw new SmithersError(SmithersErrorTypes.MANGADEX_CURSOR_FAILED_IDENTIFICATION, 'Unable to identify mangadex id from url')
     }
   
     return matches[1]
@@ -34,7 +35,7 @@ class MangadexCursor implements Cursor {
 
   async nextChapters(): Promise<Omit<IMangaUpdate, "mangaUpdateId">[]> {
     if (!this.hasMoreChpaters()) {
-      throw new Error("Trying to get more chapters when no more pages are left")
+      throw new SmithersError(SmithersErrorTypes.MANGADEX_CURSOR_NO_MORE_CHAPTERS, 'Trying to get more chapters when no more pages are left')
     }
 
     const url = `https://api.mangadex.org/manga/${this.getMangadexIdFromUrl()}/feed`

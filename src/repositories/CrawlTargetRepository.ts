@@ -3,6 +3,7 @@ import { Database } from '../database/Database'
 import { CrawlTarget, CrawlerTypes, ICrawlTarget } from '../models/CrawlTarget'
 import { CrawlTargetListOptions } from '../models/CrawlTargetListOptions';
 import { CrawlTargetGetOptions } from '../models/CrawlTargetGetOptions';
+import { SmithersError, SmithersErrorTypes } from '../errors/SmithersError';
 
 interface SQLCrawlTarget {
   crawl_target_id: number;
@@ -31,8 +32,10 @@ namespace CrawlTargetRepository {
         return 'crawl_success'
       case 'userId':
         return 'user_id'
-      default:
-        throw new Error("Unknown appKey for MangaUpdate")
+      default: {
+        throw new SmithersError(SmithersErrorTypes.CRAWL_TARGET_UNKNOWN_APP_KEY, 'Unknown appKey for CrawlTarget')
+      }
+        
     }
   }
 
@@ -127,7 +130,7 @@ namespace CrawlTargetRepository {
     const entries = Object.entries(crawlTarget)
 
     if (entries.length === 0) {
-      throw new Error ("Must update at least one property")
+      throw new SmithersError(SmithersErrorTypes.CRAWL_TARGET_UPDATE_AT_LEAST_ONE_PROPERTY, 'Must update at least one property', {crawlTargetId})
     }
   
     const result: QueryResult<SQLCrawlTarget> = await db.query({
