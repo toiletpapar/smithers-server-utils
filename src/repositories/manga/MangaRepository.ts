@@ -18,86 +18,54 @@ interface SQLManga {
 }
 
 namespace MangaRepository {
+  // Crawler + MangaUpdate
+  // Each manga in the manga array is sorted by the manga's latest update's created date, descending
+  // Each update within a manga is sorted by the chapter number, descending
   export const list = async (db: Database, opts: MangaListOptions): Promise<Manga[]> => {
-    let results: QueryResult<SQLManga>
-  
     // TODO: Stored Procedures
-    if (opts.getObject().onlyLatest) {
-      results = await db.query({
-        text: `
-          SELECT
-            x.crawler,
-            x.manga_updates
-          FROM (
-            SELECT
+    let results: QueryResult<SQLManga> = await db.query({
+      text: `
+        SELECT
+          json_build_object(
+            'crawl_target_id', crawl_target_id,
+            'name', name,
+            'url', url,
+            'adapter', adapter,
+            'last_crawled_on', last_crawled_on,
+            'crawl_success', crawl_success,
+            'user_id', user_id
+          ) crawler,
+          COALESCE(
+            json_agg(
               json_build_object(
-              'crawl_target_id', crawl_target_id,
-              'name', name,
-              'url', url,
-              'adapter', adapter,
-              'last_crawled_on', last_crawled_on,
-              'crawl_success', crawl_success,
-              'user_id', user_id
-              ) crawler,
-              CASE
-              WHEN manga_update_id IS NULL THEN ARRAY[]::json[]
-              ELSE ARRAY[json_build_object(
                 'manga_update_id', manga_update_id,
                 'chapter', chapter,
                 'chapter_name', chapter_name,
                 'crawled_on', crawled_on,
                 'is_read', is_read,
-                'read_at', read_at
-                )]
-              END AS manga_updates,
-              row_number() OVER (PARTITION BY crawl_target_id order by chapter DESC) as _rn
-            FROM crawl_target
-              LEFT JOIN manga_update
-              USING (crawl_target_id)
-            WHERE user_id = $1
-            ORDER BY crawl_target_id
-          ) x
-          WHERE _rn = 1;
-        `,
-        values: [opts.getObject().userId]
-      })
-    } else {
-      results = await db.query({
-        text: `
-          SELECT 
-            json_build_object(
-              'crawl_target_id', crawl_target_id,
-              'name', name,
-              'url', url,
-              'adapter', adapter,
-              'last_crawled_on', last_crawled_on,
-              'crawl_success', crawl_success,
-              'user_id', user_id
-            ) crawler,
-            COALESCE(
-              json_agg(
-                json_build_object(
-                  'manga_update_id', manga_update_id,
-                  'chapter', chapter,
-                  'chapter_name', chapter_name,
-                  'crawled_on', crawled_on,
-                  'is_read', is_read,
-                  'read_at', read_at
-                )
-              ) FILTER (WHERE manga_update_id IS NOT NULL),
-              '[]'
-            ) AS manga_updates
+                'read_at', read_at,
+                'date_created', date_created
+              )
+            ) FILTER (WHERE manga_update_id IS NOT NULL),
+            '[]'
+          ) AS manga_updates
+        FROM (
+          SELECT
+            *,
+            row_number() OVER (PARTITION BY crawl_target_id order by chapter DESC) as _rn
           FROM crawl_target
-          LEFT JOIN manga_update
-          USING (crawl_target_id)
+            LEFT JOIN manga_update
+            USING (crawl_target_id)
           WHERE user_id = $1
-          GROUP BY crawl_target_id
-          ORDER BY crawl_target_id;
-        `,
-        values: [opts.getObject().userId]
-      })
-    }
-  
+          ORDER BY crawl_target_id ASC, chapter DESC
+        ) x
+        ${opts.getObject().onlyLatest ? 'WHERE _rn = 1' : ''}
+        GROUP BY crawl_target_id, name, url, adapter, last_crawled_on, crawl_success, user_id
+        ORDER BY MAX(date_created) DESC NULLS LAST;
+      `,
+      values: [opts.getObject().userId]
+    })
+
     return results.rows.map((row) => {
       return Manga.fromSQL({
         ...row,
@@ -109,7 +77,8 @@ namespace MangaRepository {
         manga_updates: row.manga_updates.map((update) => {
           return {
             ...update,
-            crawled_on: new Date(update.crawled_on)
+            crawled_on: new Date(update.crawled_on),
+            date_created: new Date(update.date_created)
           }
         })
       })

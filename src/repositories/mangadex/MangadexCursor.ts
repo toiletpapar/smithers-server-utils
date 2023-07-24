@@ -64,7 +64,8 @@ class MangadexCursor implements Cursor {
         chapterName: chapter.attributes.title,
         chapter: scaleRound(parseFloat(chapter.attributes.chapter), 1),
         isRead: false,
-        readAt: `https://mangadex.org/chapter/${chapter.id}`
+        readAt: `https://mangadex.org/chapter/${chapter.id}`,
+        dateCreated: new Date()
       }
     })
   }

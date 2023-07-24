@@ -12,6 +12,7 @@ interface SQLMangaUpdate {
   chapter_name: string | null;
   is_read: boolean;
   read_at: string;
+  date_created: Date;
 }
 
 namespace MangaUpdateRepository {
@@ -31,6 +32,8 @@ namespace MangaUpdateRepository {
         return 'is_read'
       case 'readAt':
         return 'read_at'
+      case 'dateCreated':
+        return 'date_created'
       default:
         throw new SmithersError(SmithersErrorTypes.MANGA_UPDATE_UNKNOWN_APP_KEY, 'Unknown appKey for MangaUpdate')
     }
@@ -77,7 +80,7 @@ namespace MangaUpdateRepository {
 
     const result: QueryResult<SQLMangaUpdate> = await db.query({
       text: `
-        SELECT manga_update_id, manga_update.crawl_target_id, crawled_on, chapter, chapter_name, is_read, read_at
+        SELECT manga_update_id, manga_update.crawl_target_id, crawled_on, chapter, chapter_name, is_read, read_at, date_created
         FROM manga_update
         ${join}
         ${where};
@@ -92,14 +95,15 @@ namespace MangaUpdateRepository {
   
   export const insert = async (db: Database, mangaUpdate: Omit<IMangaUpdate, 'mangaUpdateId'>): Promise<MangaUpdate> => {
     const result: QueryResult<SQLMangaUpdate> = await db.query({
-      text: 'INSERT INTO manga_update (crawl_target_id, crawled_on, chapter, chapter_name, is_read, read_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;',
+      text: 'INSERT INTO manga_update (crawl_target_id, crawled_on, chapter, chapter_name, is_read, read_at, date_created) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;',
       values: [
         mangaUpdate.crawlId,
         mangaUpdate.crawledOn,
         mangaUpdate.chapter,
         mangaUpdate.chapterName,
         mangaUpdate.isRead,
-        mangaUpdate.readAt
+        mangaUpdate.readAt,
+        mangaUpdate.dateCreated
       ]
     })
   
@@ -109,7 +113,7 @@ namespace MangaUpdateRepository {
   export const update = async (
     db: Database,
     mangaUpdateId: number,
-    mangaUpdate: Partial<Omit<IMangaUpdate, 'mangaUpdateId' | 'crawlId' | 'chapter'>>,
+    mangaUpdate: Partial<Omit<IMangaUpdate, 'mangaUpdateId' | 'crawlId' | 'chapter' | 'dateCreated'>>,
     userId?: number
   ): Promise<MangaUpdate | null> => {
     const entries = Object.entries(mangaUpdate)

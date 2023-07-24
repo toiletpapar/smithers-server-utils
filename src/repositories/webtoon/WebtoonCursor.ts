@@ -80,7 +80,8 @@ class WebtoonCursor implements Cursor {
         chapterName: parseChapterName(el),
         chapter: parseChapter(el),
         isRead: false,
-        readAt: parseChapterUrl(el)
+        readAt: parseChapterUrl(el),
+        dateCreated: new Date()
       }
     })
   }

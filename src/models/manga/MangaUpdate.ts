@@ -4,6 +4,7 @@ import { SQLMangaUpdate } from '../../repositories/manga/MangaUpdateRepository';
 
 interface IMangaUpdate {
   mangaUpdateId: number; // identifier, primary
+  dateCreated: Date;
   crawlId: number; // the identifier of the crawler that produced the result, foreign
   crawledOn: Date; // the date this update was logged
   chapter: number; // number of the chapter
@@ -21,10 +22,11 @@ class MangaUpdate {
     chapter: number().min(0).max(32767).integer().required(),
     chapterName: string().defined().nullable(),
     isRead: boolean().required(),
-    readAt: string().url().required()
+    readAt: string().url().required(),
+    dateCreated: string().required().test('is-iso8601', 'Value must be in ISO8601 format', isISO8601),
   }).noUnknown().defined("Data must be defined")
 
-  static allRequestProperties: (keyof IMangaUpdate)[] = ['mangaUpdateId', 'crawlId', 'crawledOn', 'chapter', 'chapterName', 'isRead', 'readAt']
+  static allRequestProperties: (keyof IMangaUpdate)[] = ['mangaUpdateId', 'crawlId', 'crawledOn', 'chapter', 'chapterName', 'isRead', 'readAt', 'dateCreated']
   private static getPropertiesRequestSchema(validProperties: (keyof IMangaUpdate)[]) {
     return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
   }
@@ -42,6 +44,7 @@ class MangaUpdate {
       chapterName: data.chapter_name,
       isRead: data.is_read,
       readAt: data.read_at,
+      dateCreated: data.date_created
     })
   }
 
@@ -56,6 +59,7 @@ class MangaUpdate {
       chapterName: result.chapterName,
       isRead: result.isRead,
       readAt: result.readAt,
+      dateCreated: result.dateCreated
     })
   }
 
@@ -79,6 +83,10 @@ class MangaUpdate {
       coercedData.crawledOn = new Date(validatedData.crawledOn)
     }
 
+    if (validatedData.dateCreated) {
+      coercedData.dateCreated = new Date(validatedData.dateCreated)
+    }
+
     return {
       ...validatedData as any,
       ...coercedData
@@ -94,7 +102,8 @@ class MangaUpdate {
   public serialize() {
     return {
       ...this.data,
-      crawledOn: this.data.crawledOn.toISOString()
+      crawledOn: this.data.crawledOn.toISOString(),
+      dateCreated: this.data.dateCreated.toISOString()
     }
   }
 }
