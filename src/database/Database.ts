@@ -4,8 +4,12 @@ import { SecretClient } from '../secrets/SecretClient'
 import { Mutex } from 'async-mutex'
 import { SmithersError, SmithersErrorTypes } from '../errors/SmithersError'
 
+interface DatabaseQueryable {
+  query: <T extends QueryResultRow>(query: string | QueryConfig) => Promise<QueryResult<T>>
+}
+
 // Manage a single instance of a client in a pg pool
-class DatabaseClient {
+class DatabaseClient implements DatabaseQueryable {
   private client: PoolClient;
 
   constructor(client: PoolClient) {
@@ -22,7 +26,7 @@ class DatabaseClient {
 }
 
 // Manage a single instance of a pool
-class Database {
+class Database implements DatabaseQueryable {
   private pool: Pool;
   private static db: Database | null = null;
   private static mutex = new Mutex()
@@ -85,4 +89,6 @@ class Database {
 
 export {
   Database,
+  DatabaseClient,
+  DatabaseQueryable
 }

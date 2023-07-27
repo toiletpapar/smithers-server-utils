@@ -36,7 +36,6 @@ class WebtoonCursor implements Cursor {
 
   // Given a url, provide an interface to retrieve chapters
   constructor (crawlTarget: CrawlTarget) {
-    console.log(`Now using webtoon adapter to crawl ${crawlTarget.getObject().name}`)
     this.crawlTarget = crawlTarget
     this.url = new URL(this.crawlTarget.getObject().url)
     this.url.searchParams.set("page", "1")
@@ -46,7 +45,7 @@ class WebtoonCursor implements Cursor {
     }
   }
 
-  hasMoreChpaters(): boolean {
+  hasMoreChapters(): boolean {
     return !!this.url
   }
 

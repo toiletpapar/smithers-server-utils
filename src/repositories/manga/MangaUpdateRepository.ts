@@ -1,8 +1,9 @@
 import { QueryResult } from 'pg'
-import { Database } from '../../database/Database'
+import { Database, DatabaseQueryable } from '../../database/Database'
 import { IMangaUpdate, MangaUpdate } from '../../models/manga/MangaUpdate';
-import { MangaUpdateListOptions } from '../../models/manga/MangaUpdateListOptions';
+import { IMangaUpdateListOptions, MangaUpdateListOptions } from '../../models/manga/MangaUpdateListOptions';
 import { SmithersError, SmithersErrorTypes } from '../../errors/SmithersError';
+import { MangaUpdateGetOptions } from '../../models/manga/MangaUpdateGetOptions';
 
 interface SQLMangaUpdate {
   manga_update_id: number;
@@ -39,7 +40,7 @@ namespace MangaUpdateRepository {
     }
   }
 
-  export const list = async (db: Database, opts: MangaUpdateListOptions): Promise<MangaUpdate[]> => {
+  export const list = async (db: DatabaseQueryable, opts: MangaUpdateListOptions): Promise<MangaUpdate[]> => {
     const optsData = opts.getObject()
     let values: any[] = []
     let where = ''
@@ -78,6 +79,19 @@ namespace MangaUpdateRepository {
       }
     }
 
+    if (optsData.chapter) {
+      values = [
+        ...values,
+        optsData.chapter
+      ]
+
+      if (values.length === 1) {
+        where = ` WHERE chapter = $${values.length.toString()}`
+      } else {
+        where = `${where} AND chapter = $${values.length.toString()}`
+      }
+    }
+
     const result: QueryResult<SQLMangaUpdate> = await db.query({
       text: `
         SELECT manga_update_id, manga_update.crawl_target_id, crawled_on, chapter, chapter_name, is_read, read_at, date_created
@@ -92,8 +106,31 @@ namespace MangaUpdateRepository {
       return MangaUpdate.fromSQL(row)
     })
   }
+
+  export const getByChapter = async (db: DatabaseQueryable, opts: MangaUpdateGetOptions) => {
+    const optsData = opts.getObject()
+    let listOptions: IMangaUpdateListOptions = {
+      crawlTargetId: optsData.crawlTargetId,
+      chapter: optsData.chapter
+    }
+
+    if (optsData.userId) {
+      listOptions = {
+        ...listOptions,
+        userId: optsData.userId
+      }
+    }
+
+    const result: MangaUpdate[] = await list(db, new MangaUpdateListOptions(listOptions))
   
-  export const insert = async (db: Database, mangaUpdate: Omit<IMangaUpdate, 'mangaUpdateId'>): Promise<MangaUpdate> => {
+    if (result[0]) {
+      return result[0]
+    } else {
+      return null
+    }
+  }
+  
+  export const insert = async (db: DatabaseQueryable, mangaUpdate: Omit<IMangaUpdate, 'mangaUpdateId'>): Promise<MangaUpdate> => {
     const result: QueryResult<SQLMangaUpdate> = await db.query({
       text: 'INSERT INTO manga_update (crawl_target_id, crawled_on, chapter, chapter_name, is_read, read_at, date_created) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;',
       values: [
@@ -111,7 +148,7 @@ namespace MangaUpdateRepository {
   }
 
   export const update = async (
-    db: Database,
+    db: DatabaseQueryable,
     mangaUpdateId: number,
     mangaUpdate: Partial<Omit<IMangaUpdate, 'mangaUpdateId' | 'crawlId' | 'chapter' | 'dateCreated'>>,
     userId?: number

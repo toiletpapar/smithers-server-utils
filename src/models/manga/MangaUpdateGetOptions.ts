@@ -1,32 +1,35 @@
 import { object, number, array, string } from 'yup'
 
-interface ICrawlTargetListOptions {
+interface IMangaUpdateGetOptions {
   userId?: number;
-  crawlTargetId?: number;
+  crawlTargetId: number;
+  chapter: number;
 }
 
-class CrawlTargetListOptions {
-  private data: ICrawlTargetListOptions;
+class MangaUpdateGetOptions {
+  private data: IMangaUpdateGetOptions;
   private static requestSchema = object({
     userId: number().required(),
-    crawlTargetId: number().optional()
+    crawlTargetId: number().required(),
+    chapter: number().required()
   }).noUnknown().defined("Data must be defined")
 
-  static allRequestProperties: (keyof ICrawlTargetListOptions)[] = ['userId', 'crawlTargetId']
-  private static getPropertiesRequestSchema(validProperties: (keyof ICrawlTargetListOptions)[]) {
+  static allRequestProperties: (keyof IMangaUpdateGetOptions)[] = ['userId', 'crawlTargetId', 'chapter']
+  private static getPropertiesRequestSchema(validProperties: (keyof IMangaUpdateGetOptions)[]) {
     return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
   }
 
-  public constructor(data: ICrawlTargetListOptions) {
+  public constructor(data: IMangaUpdateGetOptions) {
     this.data = data
   }
 
   public static async fromRequest(data: any, strict: boolean = true) {
-    const result = (await this.validateRequest(data, this.allRequestProperties, strict)) as ICrawlTargetListOptions
+    const result = (await this.validateRequest(data, this.allRequestProperties, strict)) as IMangaUpdateGetOptions
 
     return new this({
       userId: result.userId,
-      crawlTargetId: result.crawlTargetId
+      crawlTargetId: result.crawlTargetId,
+      chapter: result.chapter
     })
   }
 
@@ -35,8 +38,8 @@ class CrawlTargetListOptions {
     data: any,  // Data from the request
     properties: any, // Properties from the request
     strict: boolean = true,
-    validProperties: (keyof ICrawlTargetListOptions)[] = this.allRequestProperties // Properties you accept from the request
-  ): Promise<Partial<ICrawlTargetListOptions>> {
+    validProperties: (keyof IMangaUpdateGetOptions)[] = this.allRequestProperties // Properties you accept from the request
+  ): Promise<Partial<IMangaUpdateGetOptions>> {
     // Validate properties provided by the request
     const validatedProperties = await this.getPropertiesRequestSchema(validProperties).validate(properties, {abortEarly: false})
 
@@ -47,7 +50,7 @@ class CrawlTargetListOptions {
     return validatedData
   }
 
-  public getObject(): ICrawlTargetListOptions {
+  public getObject(): IMangaUpdateGetOptions {
     return {
       ...this.data
     }
@@ -55,6 +58,6 @@ class CrawlTargetListOptions {
 }
 
 export {
-  CrawlTargetListOptions,
-  ICrawlTargetListOptions,
+  MangaUpdateGetOptions,
+  IMangaUpdateGetOptions,
 }

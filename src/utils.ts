@@ -1,4 +1,4 @@
-import { Database } from "./database/Database"
+import { Database, DatabaseClient, DatabaseQueryable } from "./database/Database"
 import { SecretClient } from "./secrets/SecretClient"
 
 import { CrawlTarget, CrawlerTypes, ICrawlTarget } from "./models/CrawlTarget"
@@ -15,9 +15,12 @@ import { SQLManga, MangaRepository } from "./repositories/manga/MangaRepository"
 import { MangaSyncOptions, IMangaSyncOptions } from "./models/manga/MangaSyncOptions"
 import { CrawlTargetGetOptions, ICrawlTargetGetOptions } from "./models/CrawlTargetGetOptions"
 import { SmithersError, SmithersErrorTypes } from "./errors/SmithersError"
+import { IMangaUpdateGetOptions, MangaUpdateGetOptions } from "./models/manga/MangaUpdateGetOptions"
 
 export {
   Database,
+  DatabaseClient,
+  DatabaseQueryable,
   SecretClient,
   SmithersError,
   SmithersErrorTypes,
@@ -38,6 +41,8 @@ export {
   IMangaUpdate,
   MangaUpdateListOptions,
   IMangaUpdateListOptions,
+  MangaUpdateGetOptions,
+  IMangaUpdateGetOptions,
   SQLMangaUpdate,
   MangaUpdateRepository,
 

@@ -14,7 +14,6 @@ class MangadexCursor implements Cursor {
 
   // Given a url, provide an interface to retrieve chapters
   constructor (crawlTarget: CrawlTarget) {
-    console.log(`Now using mangadex adapter to crawl ${crawlTarget.getObject().name}`)
     this.crawlTarget = crawlTarget
   }
 
@@ -29,12 +28,12 @@ class MangadexCursor implements Cursor {
     return matches[1]
   }
 
-  hasMoreChpaters(): boolean {
-    return !!this.remainingChapters
+  hasMoreChapters(): boolean {
+    return this.remainingChapters > 0
   }
 
   async nextChapters(): Promise<Omit<IMangaUpdate, "mangaUpdateId">[]> {
-    if (!this.hasMoreChpaters()) {
+    if (!this.hasMoreChapters()) {
       throw new SmithersError(SmithersErrorTypes.MANGADEX_CURSOR_NO_MORE_CHAPTERS, 'Trying to get more chapters when no more pages are left')
     }
 
@@ -54,7 +53,7 @@ class MangadexCursor implements Cursor {
 
     // Update cursor position
     this.offset += this.limit
-    this.remainingChapters = feed.getObject().total
+    this.remainingChapters = feed.getObject().total - this.offset
 
     // The list of mangadex chapters
     return feed.getObject().data.map((chapter): Omit<IMangaUpdate, "mangaUpdateId"> => {

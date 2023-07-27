@@ -5,6 +5,7 @@ interface IMangaSyncOptions extends IRequestMangaSyncOptions {
   webtoonLimiter: Bottleneck;
   mangadexLimiter: Bottleneck;
   psqlLimiter: Bottleneck;
+  onlyLatest: boolean;
 }
 
 interface IRequestMangaSyncOptions {
@@ -29,7 +30,8 @@ class MangaSyncOptions {
       ...data,
       webtoonLimiter: !data.webtoonLimiter ? new Bottleneck({maxConcurrent: 1}) : data.webtoonLimiter,
       mangadexLimiter: !data.mangadexLimiter ? new Bottleneck({maxConcurrent: 1}) : data.mangadexLimiter,
-      psqlLimiter: !data.psqlLimiter ? new Bottleneck({maxConcurrent: 50}) : data.psqlLimiter
+      psqlLimiter: !data.psqlLimiter ? new Bottleneck({maxConcurrent: 50}) : data.psqlLimiter,
+      onlyLatest: data.onlyLatest === undefined ? true : data.onlyLatest
     }
   }
 

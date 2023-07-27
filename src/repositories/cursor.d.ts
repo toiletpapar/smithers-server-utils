@@ -1,4 +1,4 @@
 interface Cursor {
-  hasMoreChpaters: () => boolean;
+  hasMoreChapters: () => boolean;
   nextChapters: () => Promise<Omit<IMangaUpdate, "mangaUpdateId">[]>;
 }

@@ -9,7 +9,7 @@ interface WebtoonAdapterOptions {
 }
 
 namespace WebtoonRepository {
-  const getCursor = (crawlTarget: CrawlTarget): WebtoonCursor => {
+  export const getCursor = (crawlTarget: CrawlTarget): WebtoonCursor => {
     return new WebtoonCursor(crawlTarget)
   }
 
@@ -22,7 +22,7 @@ namespace WebtoonRepository {
 
     let chapters: Omit<IMangaUpdate, "mangaUpdateId">[] = []
 
-    while (cursor.hasMoreChpaters()) {
+    while (cursor.hasMoreChapters()) {
       chapters = [
         ...chapters,
         ...await opts.limiter.schedule(() => cursor.nextChapters())

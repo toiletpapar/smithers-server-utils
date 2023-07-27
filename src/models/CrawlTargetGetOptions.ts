@@ -2,7 +2,7 @@ import { object, number, array, string } from 'yup'
 
 interface ICrawlTargetGetOptions {
   userId?: number;
-  crawlTargetId?: number;
+  crawlTargetId: number;
 }
 
 class CrawlTargetGetOptions {

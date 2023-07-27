@@ -1,7 +1,7 @@
 import { QueryResult } from "pg";
 import { CrawlTargetRepository, SQLCrawlTarget } from "../CrawlTargetRepository"
 import { SQLMangaUpdate } from "./MangaUpdateRepository"
-import { Database } from "../../database/Database"
+import { Database, DatabaseQueryable } from "../../database/Database"
 import { Manga } from "../../models/manga/Manga"
 import { MangaListOptions } from "../../models/manga/MangaListOptions"
 import { MangaSyncOptions } from "../../models/manga/MangaSyncOptions";
@@ -21,7 +21,7 @@ namespace MangaRepository {
   // Crawler + MangaUpdate
   // Each manga in the manga array is sorted by the manga's latest update's created date, descending
   // Each update within a manga is sorted by the chapter number, descending
-  export const list = async (db: Database, opts: MangaListOptions): Promise<Manga[]> => {
+  export const list = async (db: DatabaseQueryable, opts: MangaListOptions): Promise<Manga[]> => {
     // TODO: Stored Procedures
     let results: QueryResult<SQLManga> = await db.query({
       text: `
@@ -102,7 +102,7 @@ namespace MangaRepository {
       crawlTargets = await CrawlTargetRepository.list(db, new CrawlTargetListOptions({}))
     }
 
-    const results = await mangaSync(db, crawlTargets, optsData.webtoonLimiter, optsData.mangadexLimiter, optsData.psqlLimiter)
+    const results = await mangaSync(db, crawlTargets, optsData.webtoonLimiter, optsData.mangadexLimiter, optsData.psqlLimiter, optsData.onlyLatest)
 
     await Promise.all(results.reduce((acc: Promise<any>[], result) => {
       if (result.status === 'rejected' && result.reason.smithersContext) {

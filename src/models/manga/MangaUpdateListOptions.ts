@@ -3,16 +3,18 @@ import { object, number, array, string } from 'yup'
 interface IMangaUpdateListOptions {
   userId?: number;
   crawlTargetId?: number;
+  chapter?: number;
 }
 
 class MangaUpdateListOptions {
   private data: IMangaUpdateListOptions;
   private static requestSchema = object({
     userId: number().required(),
-    crawlTargetId: number().optional()
+    crawlTargetId: number().optional(),
+    chapter: number().optional()
   }).noUnknown().defined("Data must be defined")
 
-  static allRequestProperties: (keyof IMangaUpdateListOptions)[] = ['userId', 'crawlTargetId']
+  static allRequestProperties: (keyof IMangaUpdateListOptions)[] = ['userId', 'crawlTargetId', 'chapter']
   private static getPropertiesRequestSchema(validProperties: (keyof IMangaUpdateListOptions)[]) {
     return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
   }
@@ -26,7 +28,8 @@ class MangaUpdateListOptions {
 
     return new this({
       userId: result.userId,
-      crawlTargetId: result.crawlTargetId
+      crawlTargetId: result.crawlTargetId,
+      chapter: result.chapter
     })
   }
 

@@ -1,7 +1,7 @@
 import { QueryResult } from 'pg'
-import { Database } from '../database/Database'
+import { Database, DatabaseQueryable } from '../database/Database'
 import { CrawlTarget, CrawlerTypes, ICrawlTarget } from '../models/CrawlTarget'
-import { CrawlTargetListOptions } from '../models/CrawlTargetListOptions';
+import { CrawlTargetListOptions, ICrawlTargetListOptions } from '../models/CrawlTargetListOptions';
 import { CrawlTargetGetOptions } from '../models/CrawlTargetGetOptions';
 import { SmithersError, SmithersErrorTypes } from '../errors/SmithersError';
 
@@ -39,35 +39,7 @@ namespace CrawlTargetRepository {
     }
   }
 
-  export const list = async(db: Database, opts: CrawlTargetListOptions): Promise<CrawlTarget[]> => {
-    const optsData = opts.getObject()
-    let values: any[] = []
-    let where = ''
-
-    if (optsData.userId) {
-      values = [
-        ...values,
-        optsData.userId
-      ]
-
-      if (values.length === 1) {
-        where = ` WHERE user_id = $${values.length.toString()}`
-      } else {
-        where = `${where} AND user_id = $${values.length.toString()}`
-      }
-    }
-
-    const result: QueryResult<SQLCrawlTarget> = await db.query({
-      text: `SELECT * FROM crawl_target${where};`,
-      values
-    })
-  
-    return result.rows.map((row) => {
-      return CrawlTarget.fromSQL(row)
-    })
-  }
-
-  export const getById = async(db: Database, opts: CrawlTargetGetOptions) => {
+  export const list = async(db: DatabaseQueryable, opts: CrawlTargetListOptions): Promise<CrawlTarget[]> => {
     const optsData = opts.getObject()
     let values: any[] = []
     let where = ''
@@ -103,14 +75,34 @@ namespace CrawlTargetRepository {
       values
     })
   
-    if (result.rows[0]) {
-      return CrawlTarget.fromSQL(result.rows[0])
+    return result.rows.map((row) => {
+      return CrawlTarget.fromSQL(row)
+    })
+  }
+
+  export const getById = async(db: DatabaseQueryable, opts: CrawlTargetGetOptions) => {
+    const optsData = opts.getObject()
+    let listOptions: ICrawlTargetListOptions = {
+      crawlTargetId: optsData.crawlTargetId
+    }
+
+    if (optsData.userId) {
+      listOptions = {
+        ...listOptions,
+        userId: optsData.userId
+      }
+    }
+
+    const result: CrawlTarget[] = await list(db, new CrawlTargetListOptions(listOptions))
+  
+    if (result[0]) {
+      return result[0]
     } else {
       return null
     }
   }
   
-  export const insert = async (db: Database, crawlTarget: Omit<ICrawlTarget, 'crawlTargetId'>): Promise<CrawlTarget> => {
+  export const insert = async (db: DatabaseQueryable, crawlTarget: Omit<ICrawlTarget, 'crawlTargetId'>): Promise<CrawlTarget> => {
     const result: QueryResult<SQLCrawlTarget> = await db.query({
       text: 'INSERT INTO crawl_target (name, url, adapter, last_crawled_on, crawl_success, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;',
       values: [
@@ -127,7 +119,7 @@ namespace CrawlTargetRepository {
   }
 
   export const update = async (
-    db: Database,
+    db: DatabaseQueryable,
     crawlTargetId: number,
     crawlTarget: Partial<Omit<ICrawlTarget, 'crawlTargetId' | 'userId'>>,
     userId?: number

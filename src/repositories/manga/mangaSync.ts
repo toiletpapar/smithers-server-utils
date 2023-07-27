@@ -9,13 +9,9 @@ import { scaleEquals } from "../../utils/float";
 import Bottleneck from "bottleneck";
 import { MangaUpdateListOptions } from "../../models/manga/MangaUpdateListOptions";
 import { SmithersError, SmithersErrorTypes } from "../../errors/SmithersError";
-
-const _isRelatedUpdate = (dbUpdate: MangaUpdate, update: Omit<IMangaUpdate, 'mangaUpdateId'>): boolean => {
-  const data = dbUpdate.getObject()
-
-  return scaleEquals(data.chapter, update.chapter, 1) &&
-    data.crawlId === update.crawlId
-}
+import { MangadexCursor } from "../mangadex/MangadexCursor";
+import { WebtoonCursor } from "../webtoon/WebtoonCursor";
+import { MangaUpdateGetOptions } from "../../models/manga/MangaUpdateGetOptions";
 
 const _getUpdateObject = (dbUpdate: MangaUpdate, update: Omit<IMangaUpdate, 'mangaUpdateId'>): Partial<Pick<IMangaUpdate, 'crawledOn' | 'chapterName' | 'readAt'>> => {
   const data = dbUpdate.getObject()
@@ -46,62 +42,95 @@ const _getUpdateObject = (dbUpdate: MangaUpdate, update: Omit<IMangaUpdate, 'man
 const _updateDb = async (
   db: Database,
   limiter: Bottleneck,
-  crawlTarget: CrawlTarget, // what go crawled
-  crawlerUpdates: Omit<IMangaUpdate, "mangaUpdateId">[] // manga updates created by the crawler
+  crawlTarget: CrawlTarget,  // The current manga updates in the database
+  crawlerUpdate: Omit<IMangaUpdate, "mangaUpdateId"> // manga update created by the crawler
 ): Promise<void> => {
-  const crawlTargetId = crawlTarget.getObject().crawlTargetId
-  console.log(`Now updating data from crawler ${crawlTarget.getObject().name}`)
+  const client = await db.getClient()
+  try {
+    await client.query('BEGIN')
+    await client.query('LOCK TABLE manga_update IN ACCESS EXCLUSIVE MODE')
 
-  // Read db to find the current state of the updates (the History)
-  const dbUpdates = await MangaUpdateRepository.list(db, new MangaUpdateListOptions({crawlTargetId}))
-
-  // Update the mangaUpdates
-  await Promise.all(crawlerUpdates.reduce((acc: Promise<MangaUpdate | null>[], update) => {
-    // Merge MangaUpdate and History
-    const relatedUpdate = dbUpdates.find((dbUpdate) => _isRelatedUpdate(dbUpdate, update))
+    // We must read on every insert to ensure that a crawlerUpdate is never out of sync with what is written
+    const relatedUpdate = await MangaUpdateRepository.getByChapter(client, new MangaUpdateGetOptions({crawlTargetId: crawlTarget.getObject().crawlTargetId, chapter: crawlerUpdate.chapter}))
 
     // Write the result to db
     if (relatedUpdate) {
-      const updateData = _getUpdateObject(relatedUpdate, update)
+      // Merge MangaUpdate and History
+      const updateData = _getUpdateObject(relatedUpdate, crawlerUpdate)
 
-      if (Object.keys(updateData).length === 0) {
-        return acc
+      if (Object.keys(updateData).length !== 0) {
+        await limiter.schedule(() => MangaUpdateRepository.update(client, relatedUpdate.getObject().mangaUpdateId, updateData))
       }
-
-      return [
-        ...acc,
-        limiter.schedule(() => MangaUpdateRepository.update(db, relatedUpdate.getObject().mangaUpdateId, updateData))
-      ]
     } else {
-      return [
-        ...acc,
-        limiter.schedule(() => MangaUpdateRepository.insert(db, update))
+      await limiter.schedule(() => MangaUpdateRepository.insert(client, crawlerUpdate))
+    }
+
+    await client.query('COMMIT')
+
+    return
+  } catch (e) {
+    await client.query('ROLLBACK')
+    throw e
+  } finally {
+    client.release()
+  }
+}
+
+const syncStrategy = async (db: Database, crawlTarget: CrawlTarget, cursor: Cursor, sourceLimiter: Bottleneck, psqlLimiter: Bottleneck, onlyLatest: boolean): Promise<void> => {
+  console.log(`Now processing crawler ${crawlTarget.getObject().name}`)
+  const history = await MangaUpdateRepository.list(db, new MangaUpdateListOptions({crawlTargetId: crawlTarget.getObject().crawlTargetId}))
+  let chapterUpdates: Promise<void>[] = []
+
+  const getAndUpdateChapters = async (): Promise<Promise<void>[]> => {
+    console.log(`Crawled and updated a set of chapters from ${crawlTarget.getObject().name}...`)
+    const chapters = await sourceLimiter.schedule(() => cursor.nextChapters())
+
+    return chapters.map((chapter): Promise<void> => {
+      return _updateDb(db, psqlLimiter, crawlTarget, chapter)
+    })
+  }
+
+  if (onlyLatest && cursor.hasMoreChapters()) {
+    chapterUpdates = [
+      ...chapterUpdates,
+      ...await getAndUpdateChapters()
+    ]
+  } else {
+    while (cursor.hasMoreChapters()) {
+      chapterUpdates = [
+        ...chapterUpdates,
+        ...await getAndUpdateChapters()
       ]
     }
-  }, []))
+  }
 
   // Update the crawler
-  await CrawlTargetRepository.update(db, crawlTargetId, {crawlSuccess: true, lastCrawledOn: new Date()})
-
-  console.log(`Done updating data from crawler ${crawlTarget.getObject().name}`)
+  await Promise.all(chapterUpdates)
+  await CrawlTargetRepository.update(db, crawlTarget.getObject().crawlTargetId, {crawlSuccess: true, lastCrawledOn: new Date()})
 
   return
 }
 
+// TODO: Add parameter to fully sync all chapters instead of just the latest
 // For each crawler, choose the appropriate adapter and store the MangaUpdates
 // Return what was not successfully synced
-const mangaSync = async (db: Database, crawlTargets: CrawlTarget[], webtoonLimiter: Bottleneck, mangadexLimiter: Bottleneck, psqlLimiter: Bottleneck): Promise<PromiseSettledResult<void>[]> => {
-  return Promise.allSettled(crawlTargets.map(async (crawlTarget) => {
+const mangaSync = async (
+  db: Database,
+  crawlTargets: CrawlTarget[],
+  webtoonLimiter: Bottleneck,
+  mangadexLimiter: Bottleneck,
+  psqlLimiter: Bottleneck,
+  onlyLatest: boolean
+): Promise<PromiseSettledResult<void>[]> => {
+  return Promise.allSettled(crawlTargets.map(async (crawlTarget): Promise<void> => {
     try {
       if (crawlTarget.getObject().adapter === CrawlerTypes.webtoon) {
-        const crawlerUpdates = await WebtoonRepository.getChapters(crawlTarget, {onlyLatest: true, limiter: webtoonLimiter})
-        await _updateDb(db, psqlLimiter, crawlTarget, crawlerUpdates)
-  
+        await syncStrategy(db, crawlTarget, WebtoonRepository.getCursor(crawlTarget), webtoonLimiter, psqlLimiter, onlyLatest)
+        console.log(`Done updating data from crawler ${crawlTarget.getObject().name}`)
         return
       } else if (crawlTarget.getObject().adapter === CrawlerTypes.mangadex) {
-        const crawlerUpdates = await MangadexRepository.getChapters(crawlTarget, {onlyLatest: true, limiter: mangadexLimiter})
-        await _updateDb(db, psqlLimiter, crawlTarget, crawlerUpdates)
-  
+        await syncStrategy(db, crawlTarget, MangadexRepository.getCursor(crawlTarget), mangadexLimiter, psqlLimiter, onlyLatest)
+        console.log(`Done updating data from crawler ${crawlTarget.getObject().name}`)
         return
       } else {
         throw new SmithersError(
