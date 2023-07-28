@@ -1,7 +1,7 @@
 import { SmithersError, SmithersErrorTypes } from '../../errors/SmithersError'
 import { httpClient } from '../../httpClient/HttpClient'
 import { HTMLParser, HTMLElement } from '../../httpParser/HtmlParser'
-import { CrawlTarget } from '../../models/CrawlTarget'
+import { CrawlTarget } from '../../models/crawlers/CrawlTarget'
 import { IMangaUpdate } from '../../models/manga/MangaUpdate'
 
 const parseChapterName = (el: HTMLElement): string | null => {

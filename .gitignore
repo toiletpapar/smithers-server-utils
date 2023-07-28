@@ -3,6 +3,8 @@ credentials
 tools
 .npmrc
 *.tar.gz
+src/test.ts
+build/test.js
 
 # Logs
 logs

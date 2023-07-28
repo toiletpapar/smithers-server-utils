@@ -5,9 +5,9 @@ import { Database, DatabaseQueryable } from "../../database/Database"
 import { Manga } from "../../models/manga/Manga"
 import { MangaListOptions } from "../../models/manga/MangaListOptions"
 import { MangaSyncOptions } from "../../models/manga/MangaSyncOptions";
-import { CrawlTargetListOptions } from "../../models/CrawlTargetListOptions";
-import { CrawlTarget } from "../../models/CrawlTarget";
-import { CrawlTargetGetOptions } from "../../models/CrawlTargetGetOptions";
+import { CrawlTargetListOptions } from "../../models/crawlers/CrawlTargetListOptions";
+import { CrawlTarget } from "../../models/crawlers/CrawlTarget";
+import { CrawlTargetGetOptions } from "../../models/crawlers/CrawlTargetGetOptions";
 import { mangaSync } from "./mangaSync";
 import { SmithersError, SmithersErrorTypes } from "../../errors/SmithersError";
 
@@ -33,7 +33,9 @@ namespace MangaRepository {
             'adapter', adapter,
             'last_crawled_on', last_crawled_on,
             'crawl_success', crawl_success,
-            'user_id', user_id
+            'user_id', user_id,
+            'cover_image', encode(cover_image::bytea, 'hex'),
+            'cover_format', cover_format
           ) crawler,
           COALESCE(
             json_agg(
@@ -60,7 +62,7 @@ namespace MangaRepository {
           ORDER BY crawl_target_id ASC, chapter DESC
         ) x
         ${opts.getObject().onlyLatest ? 'WHERE _rn = 1' : ''}
-        GROUP BY crawl_target_id, name, url, adapter, last_crawled_on, crawl_success, user_id
+        GROUP BY crawl_target_id, name, url, adapter, last_crawled_on, crawl_success, user_id, cover_image, cover_format
         ORDER BY MAX(date_created) DESC NULLS LAST;
       `,
       values: [opts.getObject().userId]

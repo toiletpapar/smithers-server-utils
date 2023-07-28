@@ -2,11 +2,15 @@ import axios, { Axios } from 'axios'
 
 interface HttpConfig {
   params?: {
-    [x: string]: any
+    [p: string]: any
   },
   data?: {
-    [y: string]: any
-  }
+    [d: string]: any
+  },
+  headers?: {
+    [h: string]: string
+  },
+  responseType?: 'arraybuffer' | 'json',
 }
 
 class HttpClient {

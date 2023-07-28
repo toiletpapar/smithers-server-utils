@@ -1,4 +1,4 @@
-import { CrawlTarget, ICrawlTarget } from "../CrawlTarget";
+import { CrawlTarget, ICrawlTarget } from "../crawlers/CrawlTarget";
 import { MangaUpdate, IMangaUpdate } from "./MangaUpdate";
 import { SQLManga } from "../../repositories/manga/MangaRepository";
 
@@ -35,10 +35,10 @@ class Manga {
     }
   }
 
-  public serialize() {
+  public async serialize() {
     return {
       ...this.data,
-      crawler: this.data.crawler.serialize(),
+      crawler: await this.data.crawler.serialize(),
       mangaUpdates: this.data.mangaUpdates.map((update) => update.serialize())
     }
   }

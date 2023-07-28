@@ -1,9 +1,10 @@
 import { httpClient } from '../../httpClient/HttpClient'
-import { MangadexApiFeedResponse } from '../../models/mangadex/MangadexApiResponse'
-import { CrawlTarget } from '../../models/CrawlTarget'
+import { MangadexApiFeedResponse } from '../../models/mangadex/MangadexApiFeedResponse'
+import { CrawlTarget } from '../../models/crawlers/CrawlTarget'
 import { IMangaUpdate } from '../../models/manga/MangaUpdate'
 import { scaleRound } from '../../utils/float'
 import { SmithersError, SmithersErrorTypes } from '../../errors/SmithersError'
+import { MANGADEX_API_BASE, getMangadexIdFromUrl } from './utils'
 
 class MangadexCursor implements Cursor {
   private crawlTarget: CrawlTarget
@@ -17,17 +18,6 @@ class MangadexCursor implements Cursor {
     this.crawlTarget = crawlTarget
   }
 
-  // Example: https://mangadex.org/title/077a3fed-1634-424f-be7a-9a96b7f07b78/kingdom?order=desc
-  private getMangadexIdFromUrl(): string {
-    const matches = this.crawlTarget.getObject().url.match(/\/title\/([^/]+)/)
-
-    if (!matches || !matches[1]) {
-      throw new SmithersError(SmithersErrorTypes.MANGADEX_CURSOR_FAILED_IDENTIFICATION, 'Unable to identify mangadex id from url')
-    }
-  
-    return matches[1]
-  }
-
   hasMoreChapters(): boolean {
     return this.remainingChapters > 0
   }
@@ -37,7 +27,7 @@ class MangadexCursor implements Cursor {
       throw new SmithersError(SmithersErrorTypes.MANGADEX_CURSOR_NO_MORE_CHAPTERS, 'Trying to get more chapters when no more pages are left')
     }
 
-    const url = `https://api.mangadex.org/manga/${this.getMangadexIdFromUrl()}/feed`
+    const url = `${MANGADEX_API_BASE}/manga/${getMangadexIdFromUrl(this.crawlTarget)}/feed`
 
     console.log(`Retrieving chapters from ${url}`)
 

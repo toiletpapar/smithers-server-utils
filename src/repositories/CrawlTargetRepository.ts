@@ -1,8 +1,8 @@
 import { QueryResult } from 'pg'
 import { Database, DatabaseQueryable } from '../database/Database'
-import { CrawlTarget, CrawlerTypes, ICrawlTarget } from '../models/CrawlTarget'
-import { CrawlTargetListOptions, ICrawlTargetListOptions } from '../models/CrawlTargetListOptions';
-import { CrawlTargetGetOptions } from '../models/CrawlTargetGetOptions';
+import { CrawlTarget, CrawlerTypes, ICrawlTarget, ImageTypes } from '../models/crawlers/CrawlTarget'
+import { CrawlTargetListOptions, ICrawlTargetListOptions } from '../models/crawlers/CrawlTargetListOptions';
+import { CrawlTargetGetOptions } from '../models/crawlers/CrawlTargetGetOptions';
 import { SmithersError, SmithersErrorTypes } from '../errors/SmithersError';
 
 interface SQLCrawlTarget {
@@ -13,6 +13,8 @@ interface SQLCrawlTarget {
   last_crawled_on: Date | null;
   crawl_success: boolean | null;
   user_id: number;
+  cover_image: string | null;
+  cover_format: ImageTypes | null;
 }
 
 namespace CrawlTargetRepository {
@@ -32,6 +34,10 @@ namespace CrawlTargetRepository {
         return 'crawl_success'
       case 'userId':
         return 'user_id'
+      case 'coverImage':
+        return 'cover_image'
+      case 'coverFormat':
+        return 'cover_format'
       default: {
         throw new SmithersError(SmithersErrorTypes.CRAWL_TARGET_UNKNOWN_APP_KEY, 'Unknown appKey for CrawlTarget')
       }
@@ -104,14 +110,16 @@ namespace CrawlTargetRepository {
   
   export const insert = async (db: DatabaseQueryable, crawlTarget: Omit<ICrawlTarget, 'crawlTargetId'>): Promise<CrawlTarget> => {
     const result: QueryResult<SQLCrawlTarget> = await db.query({
-      text: 'INSERT INTO crawl_target (name, url, adapter, last_crawled_on, crawl_success, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;',
+      text: 'INSERT INTO crawl_target (name, url, adapter, last_crawled_on, crawl_success, user_id, cover_image, cover_format) VALUES ($1, $2, $3, $4, $5, $6, $7::bytea, $8) RETURNING *;',
       values: [
         crawlTarget.name,
         crawlTarget.url,
         crawlTarget.adapter,
         crawlTarget.lastCrawledOn,
         crawlTarget.crawlSuccess,
-        crawlTarget.userId
+        crawlTarget.userId,
+        crawlTarget.coverImage ? crawlTarget.coverImage.toString('hex') : null,
+        crawlTarget.coverFormat
       ]
     })
   
@@ -130,7 +138,15 @@ namespace CrawlTargetRepository {
       throw new SmithersError(SmithersErrorTypes.CRAWL_TARGET_UPDATE_AT_LEAST_ONE_PROPERTY, 'Must update at least one property', {crawlTargetId})
     }
 
-    let values = [...entries.map(([key, value]) => value), crawlTargetId]
+    let values = [...entries.map(([key, value]) => {
+      const sqlKey = getSQLKey(key as keyof ICrawlTarget)
+
+      if (sqlKey === 'cover_image') {
+        return value ? value.toString('hex') : null
+      }
+
+      return value
+    }), crawlTargetId]
 
     if (userId) {
       values = [
@@ -145,7 +161,16 @@ namespace CrawlTargetRepository {
         SET
           ${
             entries.reduce((acc, [key, value], index) => {
-              let sql = `${acc}${getSQLKey(key as keyof ICrawlTarget)}=$${index+1}`
+              let updateSql = ''
+              const sqlKey = getSQLKey(key as keyof ICrawlTarget)
+
+              if (sqlKey === 'cover_image') {
+                updateSql = `${sqlKey}=$${index+1}::bytea`
+              } else {
+                updateSql = `${sqlKey}=$${index+1}`
+              }
+
+              let sql = `${acc}${updateSql}`
 
               if (index !== entries.length - 1) {
                 sql = `${sql},\n`

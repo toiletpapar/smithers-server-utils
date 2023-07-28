@@ -1,7 +1,7 @@
 import { CrawlTargetRepository, SQLCrawlTarget } from "../CrawlTargetRepository"
 import { MangaUpdateRepository, SQLMangaUpdate } from "./MangaUpdateRepository"
 import { Database } from "../../database/Database"
-import { CrawlTarget, CrawlerTypes } from "../../models/CrawlTarget";
+import { CrawlTarget, CrawlerTypes, ICrawlTarget } from "../../models/crawlers/CrawlTarget";
 import { WebtoonRepository } from "../webtoon/WebtoonRepository";
 import { MangadexRepository } from "../mangadex/MangadexRepository";
 import { IMangaUpdate, MangaUpdate } from "../../models/manga/MangaUpdate";
@@ -12,6 +12,7 @@ import { SmithersError, SmithersErrorTypes } from "../../errors/SmithersError";
 import { MangadexCursor } from "../mangadex/MangadexCursor";
 import { WebtoonCursor } from "../webtoon/WebtoonCursor";
 import { MangaUpdateGetOptions } from "../../models/manga/MangaUpdateGetOptions";
+import { Image } from "../../models/image/Image";
 
 const _getUpdateObject = (dbUpdate: MangaUpdate, update: Omit<IMangaUpdate, 'mangaUpdateId'>): Partial<Pick<IMangaUpdate, 'crawledOn' | 'chapterName' | 'readAt'>> => {
   const data = dbUpdate.getObject()
@@ -76,9 +77,8 @@ const _updateDb = async (
   }
 }
 
-const syncStrategy = async (db: Database, crawlTarget: CrawlTarget, cursor: Cursor, sourceLimiter: Bottleneck, psqlLimiter: Bottleneck, onlyLatest: boolean): Promise<void> => {
+const syncStrategy = async (db: Database, crawlTarget: CrawlTarget, cursor: Cursor, sourceLimiter: Bottleneck, psqlLimiter: Bottleneck, onlyLatest: boolean, image: Image | null): Promise<void> => {
   console.log(`Now processing crawler ${crawlTarget.getObject().name}`)
-  const history = await MangaUpdateRepository.list(db, new MangaUpdateListOptions({crawlTargetId: crawlTarget.getObject().crawlTargetId}))
   let chapterUpdates: Promise<void>[] = []
 
   const getAndUpdateChapters = async (): Promise<Promise<void>[]> => {
@@ -104,14 +104,32 @@ const syncStrategy = async (db: Database, crawlTarget: CrawlTarget, cursor: Curs
     }
   }
 
-  // Update the crawler
+  // Push the manga updates
   await Promise.all(chapterUpdates)
-  await CrawlTargetRepository.update(db, crawlTarget.getObject().crawlTargetId, {crawlSuccess: true, lastCrawledOn: new Date()})
+
+  // Update the crawler
+  let crawlerUpdate: Partial<Omit<ICrawlTarget, 'crawlTargetId' | 'userId'>> = {
+    crawlSuccess: true,
+    lastCrawledOn: new Date(),
+  }
+
+  if (image) {
+    crawlerUpdate = {
+      ...crawlerUpdate,
+      coverFormat: image.getObject().format,
+      coverImage: image.getObject().data
+    }
+  }
+
+  await CrawlTargetRepository.update(
+    db,
+    crawlTarget.getObject().crawlTargetId,
+    crawlerUpdate
+  )
 
   return
 }
 
-// TODO: Add parameter to fully sync all chapters instead of just the latest
 // For each crawler, choose the appropriate adapter and store the MangaUpdates
 // Return what was not successfully synced
 const mangaSync = async (
@@ -125,11 +143,13 @@ const mangaSync = async (
   return Promise.allSettled(crawlTargets.map(async (crawlTarget): Promise<void> => {
     try {
       if (crawlTarget.getObject().adapter === CrawlerTypes.webtoon) {
-        await syncStrategy(db, crawlTarget, WebtoonRepository.getCursor(crawlTarget), webtoonLimiter, psqlLimiter, onlyLatest)
+        const image = await webtoonLimiter.schedule(() => WebtoonRepository.getLatestCover(crawlTarget))
+        await syncStrategy(db, crawlTarget, WebtoonRepository.getCursor(crawlTarget), webtoonLimiter, psqlLimiter, onlyLatest, image)
         console.log(`Done updating data from crawler ${crawlTarget.getObject().name}`)
         return
       } else if (crawlTarget.getObject().adapter === CrawlerTypes.mangadex) {
-        await syncStrategy(db, crawlTarget, MangadexRepository.getCursor(crawlTarget), mangadexLimiter, psqlLimiter, onlyLatest)
+        const image = await mangadexLimiter.schedule(() => MangadexRepository.getLatestCover(crawlTarget))
+        await syncStrategy(db, crawlTarget, MangadexRepository.getCursor(crawlTarget), mangadexLimiter, psqlLimiter, onlyLatest, image)
         console.log(`Done updating data from crawler ${crawlTarget.getObject().name}`)
         return
       } else {

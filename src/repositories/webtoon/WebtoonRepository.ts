@@ -1,4 +1,7 @@
-import { CrawlTarget } from '../../models/CrawlTarget'
+import { httpClient } from '../../httpClient/HttpClient';
+import { HTMLParser } from '../../httpParser/HtmlParser';
+import { CrawlTarget, ImageTypes } from '../../models/crawlers/CrawlTarget'
+import { Image } from '../../models/image/Image';
 import { IMangaUpdate } from '../../models/manga/MangaUpdate'
 import { WebtoonCursor } from "./WebtoonCursor"
 import Bottleneck from 'bottleneck'
@@ -30,6 +33,32 @@ namespace WebtoonRepository {
     }
 
     return chapters
+  }
+
+  export const getLatestCover = async (crawlTarget: CrawlTarget): Promise<Image | null> => {
+    const url = new URL(crawlTarget.getObject().url)
+    url.searchParams.set("page", "1")
+    const res = await httpClient.get(url.toString())
+    const currentPage = HTMLParser.parse(res.data)
+
+    const el = currentPage.querySelector('._episodeItem .thmb > img')
+    const src = el?.getAttribute('src')
+
+    if (!src) {
+      console.log(`Could not find thumbnail image for ${crawlTarget.getObject().name}`)
+      return null
+    }
+
+    const coverImageRes = await httpClient.get(src, {responseType: 'arraybuffer', headers: {'Referer': 'https://www.webtoons.com/'}})
+
+    if (coverImageRes.headers['content-type'] === "image/png") {
+      return new Image({
+        format: ImageTypes.png,
+        data: Buffer.from(coverImageRes.data)
+      })
+    } else {
+      throw new Error(`Unrecognized mime type: ${coverImageRes.headers['Content-Type']}`)
+    }
   }
 }
 
