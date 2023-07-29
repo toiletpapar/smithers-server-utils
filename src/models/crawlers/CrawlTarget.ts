@@ -80,8 +80,8 @@ class CrawlTarget {
   }
 
   public static async validateRequest(
-    data: any,  // Data from the request
-    properties: any, // Properties from the request
+    data: any,  // Data in the request
+    properties: any, // Properties in the request
     strict: boolean = true,
     validProperties: (keyof ICrawlTarget)[] = this.allRequestProperties // Properties you accept from the request
   ): Promise<Partial<ICrawlTarget>> {

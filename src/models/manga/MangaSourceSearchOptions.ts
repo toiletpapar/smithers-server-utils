@@ -3,8 +3,9 @@ import { object, string, array, number } from 'yup'
 interface IMangaSourceSearchOptions {
   query: string;  // The manga to look for
   userId: number; // The person requesting the search
-  limit: number;  // The maximum number of search results to return
-  offset: number; // The number of search results to skip
+  page: number;   // Used to offset the results returned from different sources
+  // limit: number;  // The maximum number of search results to return
+  // offset: number; // The number of search results to skip
 }
 
 class MangaSourceSearchOptions {
@@ -12,11 +13,10 @@ class MangaSourceSearchOptions {
   private static requestSchema = object({
     query: string().required(),
     userId: number().required(),
-    limit: number().required(),
-    offset: number().required()
+    page: number().positive().integer().required()
   }).noUnknown().defined("Data must be defined")
 
-  static allRequestProperties: (keyof IMangaSourceSearchOptions)[] = ['query', 'userId', 'limit', 'offset']
+  static allRequestProperties: (keyof IMangaSourceSearchOptions)[] = ['query', 'userId', 'page']
   private static getPropertiesRequestSchema(validProperties: (keyof IMangaSourceSearchOptions)[]) {
     return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
   }
@@ -31,8 +31,7 @@ class MangaSourceSearchOptions {
     return new this({
       query: result.query,
       userId: result.userId,
-      limit: result.limit,
-      offset: result.offset
+      page: result.page
     })
   }
 

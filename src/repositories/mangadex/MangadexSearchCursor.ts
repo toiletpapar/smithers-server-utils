@@ -1,5 +1,5 @@
 import { httpClient } from '../../httpClient/HttpClient'
-import { CrawlTarget, CrawlerTypes, ICrawlTarget } from '../../models/crawlers/CrawlTarget'
+import { CrawlerTypes, ICrawlTarget } from '../../models/crawlers/CrawlTarget'
 import { MANGADEX_API_BASE, MANGADEX_BASE } from './utils'
 import { MangadexCursor } from './MangadexCursor'
 import { MangaSourceSearchOptions } from '../../models/manga/MangaSourceSearchOptions'
@@ -10,6 +10,7 @@ class MangadexSearchCursor implements Cursor<Omit<ICrawlTarget, 'crawlTargetId'>
 
   // Given a url, provide an interface to retrieve chapters
   constructor (opts: MangaSourceSearchOptions) {
+    const LIMIT = 10
     this.cursor = new MangadexCursor({
       getter: async (limit, offset) => {
         const url = `${MANGADEX_API_BASE}/manga`
@@ -22,6 +23,9 @@ class MangadexSearchCursor implements Cursor<Omit<ICrawlTarget, 'crawlTargetId'>
           "limit": limit.toString(),
           "offset": offset.toString()
         }})
+
+        console.log(limit.toString())
+        console.log(offset.toString())
 
         return new MangadexApiSearchResponse(res.data)
       },
@@ -37,8 +41,8 @@ class MangadexSearchCursor implements Cursor<Omit<ICrawlTarget, 'crawlTargetId'>
           coverFormat: null
         }
       },
-      limit: opts.getObject().limit,
-      offset: opts.getObject().offset
+      limit: LIMIT,
+      offset: (opts.getObject().page - 1) * LIMIT
     })
   }
 

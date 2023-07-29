@@ -3,6 +3,7 @@ import { httpClient } from '../../httpClient/HttpClient'
 import { HTMLParser, HTMLElement } from '../../httpParser/HtmlParser'
 import { CrawlTarget } from '../../models/crawlers/CrawlTarget'
 import { IMangaUpdate } from '../../models/manga/MangaUpdate'
+import { WebtoonCursor } from './WebtoonCursor'
 
 const parseChapterName = (el: HTMLElement): string | null => {
   return el.querySelector(".subj > span")?.innerText || null
@@ -30,59 +31,51 @@ const parseChapterUrl = (el: HTMLElement): string => {
 }
 
 class WebtoonChapterCursor implements ChapterCursor {
+  private cursor: WebtoonCursor<Omit<IMangaUpdate, "mangaUpdateId">>
   private crawlTarget: CrawlTarget
-  private url: URL | null
-  private currentPage: HTMLElement | null = null
 
   // Given a url, provide an interface to retrieve chapters
   constructor (crawlTarget: CrawlTarget) {
     this.crawlTarget = crawlTarget
-    this.url = new URL(this.crawlTarget.getObject().url)
-    this.url.searchParams.set("page", "1")
-    
-    if (!this.url.searchParams.get("title_no")) {
-      throw new SmithersError(SmithersErrorTypes.WEBTOON_CURSOR_NO_TITLE, 'Webtoon URL must contain a title_no query parameter', {url: this.url})
+    const url = new URL(this.crawlTarget.getObject().url)
+    url.searchParams.set("page", "1")
+
+    if (!url.searchParams.get("title_no")) {
+      throw new SmithersError(SmithersErrorTypes.WEBTOON_CURSOR_NO_TITLE, 'Webtoon URL must contain a title_no query parameter', {url: url})
     }
+
+    this.cursor = new WebtoonCursor({
+      getter: async (url: string) => {
+        console.log(`Retrieving chapters from ${url.toString()}`)
+        const res = await httpClient.get(url)
+        return HTMLParser.parse(res.data)
+      },
+      transformer: (data: HTMLElement): Omit<IMangaUpdate, "mangaUpdateId">[] => {
+        // Find relevant chapters (called Findings)
+        // The list of webtoon episodes
+        const list = data.querySelectorAll("._episodeItem")
+        return list.map((el): Omit<IMangaUpdate, "mangaUpdateId"> => {
+          return {
+            crawlId: this.crawlTarget.getObject().crawlTargetId,
+            crawledOn: new Date(),
+            chapterName: parseChapterName(el),
+            chapter: parseChapter(el),
+            isRead: false,
+            readAt: parseChapterUrl(el),
+            dateCreated: new Date()
+          }
+        })
+      },
+      url: url.toString()
+    })
   }
 
   hasMoreChapters(): boolean {
-    return !!this.url
+    return this.cursor.hasNext()
   }
 
   async nextChapters(): Promise<Omit<IMangaUpdate, "mangaUpdateId">[]> {
-    if (!this.url) {
-      throw new SmithersError(SmithersErrorTypes.WEBTOON_CURSOR_NO_MORE_CHAPTERS, 'Trying to get more chapters when no more pages are left')
-    }
-
-    console.log(`Retrieving chapters from ${this.url.toString()}`)
-
-    // Update the page data that contains chapters
-    const res = await httpClient.get(this.url.toString())
-    this.currentPage = HTMLParser.parse(res.data)
-
-    // Point towards the next page of data if applicable
-    const el = this.currentPage.querySelector(".paginate > [href='#'] + a")
-
-    if (el && el.getAttribute("href")) {
-      this.url = new URL("https://www.webtoons.com" + el.getAttribute("href"))
-    } else {
-      this.url = null
-    }
-
-    // Find relevant chapters (called Findings)
-    // The list of webtoon episodes
-    const list = this.currentPage.querySelectorAll("._episodeItem")
-    return list.map((el): Omit<IMangaUpdate, "mangaUpdateId"> => {
-      return {
-        crawlId: this.crawlTarget.getObject().crawlTargetId,
-        crawledOn: new Date(),
-        chapterName: parseChapterName(el),
-        chapter: parseChapter(el),
-        isRead: false,
-        readAt: parseChapterUrl(el),
-        dateCreated: new Date()
-      }
-    })
+    return this.cursor.next()
   }
 }
 
