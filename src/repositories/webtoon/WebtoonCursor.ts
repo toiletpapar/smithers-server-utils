@@ -8,6 +8,7 @@ interface WebtoonCursorOptions<T> {
   url: string;
 }
 
+// Describes how to paginate through webtoon, provides consumers with hooks
 class WebtoonCursor<T> implements Cursor<T> {
   private url: string | null = null
   private currentPage: HTMLElement | null = null

@@ -14,6 +14,7 @@ interface MangadexCursorOptions<D, R extends MangadexResponse<D>, T> {
   offset: number;
 }
 
+// Describes how to paginate through mangadex, provides consumers with hooks
 class MangadexCursor<D, R extends MangadexResponse<D>, T> implements Cursor<T> {
   private limit: number
   private offset: number

@@ -24,9 +24,6 @@ class MangadexSearchCursor implements Cursor<Omit<ICrawlTarget, 'crawlTargetId'>
           "offset": offset.toString()
         }})
 
-        console.log(limit.toString())
-        console.log(offset.toString())
-
         return new MangadexApiSearchResponse(res.data)
       },
       transformer: (manga): Omit<ICrawlTarget, 'crawlTargetId'> => {

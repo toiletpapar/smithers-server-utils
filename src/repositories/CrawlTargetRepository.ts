@@ -4,6 +4,9 @@ import { CrawlTarget, CrawlerTypes, ICrawlTarget, ImageTypes } from '../models/c
 import { CrawlTargetListOptions, ICrawlTargetListOptions } from '../models/crawlers/CrawlTargetListOptions';
 import { CrawlTargetGetOptions } from '../models/crawlers/CrawlTargetGetOptions';
 import { SmithersError, SmithersErrorTypes } from '../errors/SmithersError';
+import { CrawlTargetSourceSearchOptions } from '../models/crawlers/CrawlTargetSourceSearchOptions';
+import { MangadexRepository } from './mangadex/MangadexRepository';
+import { WebtoonRepository } from './webtoon/WebtoonRepository';
 
 interface SQLCrawlTarget {
   crawl_target_id: number;
@@ -46,10 +49,23 @@ namespace CrawlTargetRepository {
   }
 
   // External search for crawl targets
-  // On-demand, uncached - reduce unneeded crawling
-  // export const search = async (opts: CrawlTargetSourceSearchOptions): Omit<IMangaUpdate, "mangaUpdateId">[] => {
-  //   // const cursor 
-  // }
+  // On-demand, uncached, paginated - reduce unneeded crawling
+  export const search = async (opts: CrawlTargetSourceSearchOptions): Promise<Omit<ICrawlTarget, "crawlTargetId">[]> => {
+    let cursor: Cursor<Omit<ICrawlTarget, "crawlTargetId">>
+    
+    switch (opts.getObject().source) {
+      case CrawlerTypes.mangadex:
+        cursor = MangadexRepository.getSearchCursor(opts)
+        break;
+      case CrawlerTypes.webtoon:
+        cursor = WebtoonRepository.getSearchCursor(opts)
+        break;
+      default:
+        throw new SmithersError(SmithersErrorTypes.CRAWL_TARGET_UNKNOWN_SOURCE, 'Unknown source provided to crawler search', opts)
+    }
+
+    return cursor.next()
+  }
 
   export const list = async(db: DatabaseQueryable, opts: CrawlTargetListOptions): Promise<CrawlTarget[]> => {
     const optsData = opts.getObject()
