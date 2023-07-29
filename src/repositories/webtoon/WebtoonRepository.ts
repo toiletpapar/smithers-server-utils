@@ -3,7 +3,7 @@ import { HTMLParser } from '../../httpParser/HtmlParser';
 import { CrawlTarget, ImageTypes } from '../../models/crawlers/CrawlTarget'
 import { Image } from '../../models/image/Image';
 import { IMangaUpdate } from '../../models/manga/MangaUpdate'
-import { WebtoonCursor } from "./WebtoonCursor"
+import { WebtoonChapterCursor } from "./WebtoonChapterCursor"
 import Bottleneck from 'bottleneck'
 
 interface WebtoonAdapterOptions {
@@ -12,8 +12,8 @@ interface WebtoonAdapterOptions {
 }
 
 namespace WebtoonRepository {
-  export const getCursor = (crawlTarget: CrawlTarget): WebtoonCursor => {
-    return new WebtoonCursor(crawlTarget)
+  export const getCursor = (crawlTarget: CrawlTarget): WebtoonChapterCursor => {
+    return new WebtoonChapterCursor(crawlTarget)
   }
 
   export const getChapters = async (crawlTarget: CrawlTarget, opts: WebtoonAdapterOptions): Promise<Omit<IMangaUpdate, "mangaUpdateId">[]> => {

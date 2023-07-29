@@ -1,11 +1,13 @@
 import { httpClient } from '../../httpClient/HttpClient';
 import { CrawlTarget, ImageTypes } from '../../models/crawlers/CrawlTarget'
 import { IMangaUpdate } from '../../models/manga/MangaUpdate'
-import { MangadexCursor } from "./MangadexCursor"
+import { MangadexChapterCursor } from "./MangadexChapterCursor"
 import Bottleneck from 'bottleneck'
 import { MANGADEX_API_BASE, MANGADEX_BASE, getMangadexIdFromUrl } from './utils';
 import { MangadexApiCoverResponse } from '../../models/mangadex/MangadexApiCoverResponse';
 import { Image } from '../../models/image/Image';
+import { MangaSourceSearchOptions } from '../../models/manga/MangaSourceSearchOptions';
+import { MangadexSearchCursor } from './MangadexSearchCursor';
 
 interface MangadexAdapterOptions {
   onlyLatest: boolean;
@@ -13,8 +15,8 @@ interface MangadexAdapterOptions {
 }
 
 namespace MangadexRepository {
-  export const getCursor = (crawlTarget: CrawlTarget): MangadexCursor => {
-    return new MangadexCursor(crawlTarget)
+  export const getCursor = (crawlTarget: CrawlTarget): MangadexChapterCursor => {
+    return new MangadexChapterCursor(crawlTarget)
   }
 
   export const getChapters = async (crawlTarget: CrawlTarget, opts: MangadexAdapterOptions): Promise<Omit<IMangaUpdate, "mangaUpdateId">[]> => {
@@ -34,6 +36,10 @@ namespace MangadexRepository {
     }
 
     return chapters
+  }
+
+  export const getSearchCursor = (opts: MangaSourceSearchOptions): MangadexSearchCursor => {
+    return new MangadexSearchCursor(opts)
   }
 
   export const getLatestCover = async (crawlTarget: CrawlTarget): Promise<Image | null> => {

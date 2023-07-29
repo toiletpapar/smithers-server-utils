@@ -31,5 +31,6 @@ class MangadexApiFeedResponse {
 
 export {
   MangadexApiFeedResponse,
-  IMangadexApiFeedResponse
+  IMangadexApiFeedResponse,
+  IMangadexApiFeedChapter
 }

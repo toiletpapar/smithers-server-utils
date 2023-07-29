@@ -29,7 +29,7 @@ const parseChapterUrl = (el: HTMLElement): string => {
   return href
 }
 
-class WebtoonCursor implements Cursor {
+class WebtoonChapterCursor implements ChapterCursor {
   private crawlTarget: CrawlTarget
   private url: URL | null
   private currentPage: HTMLElement | null = null
@@ -87,5 +87,5 @@ class WebtoonCursor implements Cursor {
 }
 
 export {
-  WebtoonCursor
+  WebtoonChapterCursor
 }

@@ -9,8 +9,8 @@ import { scaleEquals } from "../../utils/float";
 import Bottleneck from "bottleneck";
 import { MangaUpdateListOptions } from "../../models/manga/MangaUpdateListOptions";
 import { SmithersError, SmithersErrorTypes } from "../../errors/SmithersError";
-import { MangadexCursor } from "../mangadex/MangadexCursor";
-import { WebtoonCursor } from "../webtoon/WebtoonCursor";
+import { MangadexChapterCursor } from "../mangadex/MangadexChapterCursor";
+import { WebtoonChapterCursor } from "../webtoon/WebtoonChapterCursor";
 import { MangaUpdateGetOptions } from "../../models/manga/MangaUpdateGetOptions";
 import { Image } from "../../models/image/Image";
 
@@ -77,7 +77,7 @@ const _updateDb = async (
   }
 }
 
-const syncStrategy = async (db: Database, crawlTarget: CrawlTarget, cursor: Cursor, sourceLimiter: Bottleneck, psqlLimiter: Bottleneck, onlyLatest: boolean, image: Image | null): Promise<void> => {
+const syncStrategy = async (db: Database, crawlTarget: CrawlTarget, cursor: ChapterCursor, sourceLimiter: Bottleneck, psqlLimiter: Bottleneck, onlyLatest: boolean, image: Image | null): Promise<void> => {
   console.log(`Now processing crawler ${crawlTarget.getObject().name}`)
   let chapterUpdates: Promise<void>[] = []
 
