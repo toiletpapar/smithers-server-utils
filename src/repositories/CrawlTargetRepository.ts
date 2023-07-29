@@ -18,6 +18,7 @@ interface SQLCrawlTarget {
   user_id: number;
   cover_image: string | null;
   cover_format: ImageTypes | null;
+  favourite: boolean;
 }
 
 namespace CrawlTargetRepository {
@@ -41,6 +42,8 @@ namespace CrawlTargetRepository {
         return 'cover_image'
       case 'coverFormat':
         return 'cover_format'
+      case 'favourite':
+        return 'favourite'
       default: {
         throw new SmithersError(SmithersErrorTypes.CRAWL_TARGET_UNKNOWN_APP_KEY, 'Unknown appKey for CrawlTarget')
       }
@@ -132,7 +135,7 @@ namespace CrawlTargetRepository {
   
   export const insert = async (db: DatabaseQueryable, crawlTarget: Omit<ICrawlTarget, 'crawlTargetId'>): Promise<CrawlTarget> => {
     const result: QueryResult<SQLCrawlTarget> = await db.query({
-      text: 'INSERT INTO crawl_target (name, url, adapter, last_crawled_on, crawl_success, user_id, cover_image, cover_format) VALUES ($1, $2, $3, $4, $5, $6, $7::bytea, $8) RETURNING *;',
+      text: 'INSERT INTO crawl_target (name, url, adapter, last_crawled_on, crawl_success, user_id, cover_image, cover_format, favourite) VALUES ($1, $2, $3, $4, $5, $6, $7::bytea, $8, $9) RETURNING *;',
       values: [
         crawlTarget.name,
         crawlTarget.url,
@@ -141,7 +144,8 @@ namespace CrawlTargetRepository {
         crawlTarget.crawlSuccess,
         crawlTarget.userId,
         crawlTarget.coverImage ? crawlTarget.coverImage.toString('hex') : null,
-        crawlTarget.coverFormat
+        crawlTarget.coverFormat,
+        crawlTarget.favourite
       ]
     })
   

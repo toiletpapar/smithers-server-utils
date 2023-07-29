@@ -37,7 +37,8 @@ namespace MangaRepository {
             'crawl_success', crawl_success,
             'user_id', user_id,
             'cover_image', encode(cover_image::bytea, 'hex'),
-            'cover_format', cover_format
+            'cover_format', cover_format,
+            'favourite', favourite
           ) crawler,
           COALESCE(
             json_agg(
@@ -64,8 +65,8 @@ namespace MangaRepository {
           ORDER BY crawl_target_id ASC, chapter DESC
         ) x
         ${opts.getObject().onlyLatest ? 'WHERE _rn = 1' : ''}
-        GROUP BY crawl_target_id, name, url, adapter, last_crawled_on, crawl_success, user_id, cover_image, cover_format
-        ORDER BY MAX(date_created) DESC NULLS LAST;
+        GROUP BY crawl_target_id, name, url, adapter, last_crawled_on, crawl_success, user_id, cover_image, cover_format, favourite
+        ORDER BY favourite DESC, MAX(date_created) DESC NULLS LAST;
       `,
       values: [opts.getObject().userId]
     })

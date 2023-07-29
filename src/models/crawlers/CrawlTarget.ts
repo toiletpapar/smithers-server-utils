@@ -24,6 +24,7 @@ interface ICrawlTarget {
   userId: number; // the identifier of the owner of this target
   coverImage: Buffer | null; // the manga cover's image data
   coverFormat: ImageTypes | null; // the format of the cover image data
+  favourite: boolean;
 }
 
 class CrawlTarget {
@@ -37,10 +38,11 @@ class CrawlTarget {
     crawlSuccess: boolean().defined().nullable(),
     userId: number().required(),
     coverImage: mixed<Buffer>().defined().nullable().test('is-buffer', 'Value must be a Buffer', (input) => input === null || Buffer.isBuffer(input)),
-    coverFormat: mixed<ImageTypes>().oneOf(Object.values(ImageTypes)).required()
+    coverFormat: mixed<ImageTypes>().oneOf(Object.values(ImageTypes)).required(),
+    favourite: boolean().required()
   }).noUnknown().defined("Data must be defined")
 
-  static allRequestProperties: (keyof ICrawlTarget)[] = ['crawlTargetId', 'name', 'url', 'adapter', 'lastCrawledOn', 'crawlSuccess', 'userId']
+  static allRequestProperties: (keyof ICrawlTarget)[] = ['crawlTargetId', 'name', 'url', 'adapter', 'lastCrawledOn', 'crawlSuccess', 'userId', 'favourite']
   private static getPropertiesRequestSchema(validProperties: (keyof ICrawlTarget)[]) {
     return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
   }
@@ -59,7 +61,8 @@ class CrawlTarget {
       crawlSuccess: data.crawl_success,
       userId: data.user_id,
       coverImage: data.cover_image ? Buffer.from(data.cover_image, 'hex') : null,
-      coverFormat: data.cover_format
+      coverFormat: data.cover_format,
+      favourite: data.favourite
     })
   }
 
@@ -75,7 +78,8 @@ class CrawlTarget {
       crawlSuccess: result.crawlSuccess,
       userId: result.userId,
       coverImage: result.coverImage,
-      coverFormat: result.coverFormat
+      coverFormat: result.coverFormat,
+      favourite: result.favourite
     })
   }
 
