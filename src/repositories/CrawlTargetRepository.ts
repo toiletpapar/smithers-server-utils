@@ -45,6 +45,12 @@ namespace CrawlTargetRepository {
     }
   }
 
+  // External search for crawl targets
+  // On-demand, uncached - reduce unneeded crawling
+  // export const search = async (opts: CrawlTargetSourceSearchOptions): Omit<IMangaUpdate, "mangaUpdateId">[] => {
+  //   // const cursor 
+  // }
+
   export const list = async(db: DatabaseQueryable, opts: CrawlTargetListOptions): Promise<CrawlTarget[]> => {
     const optsData = opts.getObject()
     let values: any[] = []

@@ -1,7 +1,7 @@
 import { HTMLElement } from 'node-html-parser'
 import { SmithersError, SmithersErrorTypes } from '../../errors/SmithersError'
 import { CrawlerTypes, ICrawlTarget } from '../../models/crawlers/CrawlTarget'
-import { MangaSourceSearchOptions } from '../../models/manga/MangaSourceSearchOptions'
+import { CrawlTargetSourceSearchOptions } from '../../models/crawlers/CrawlTargetSourceSearchOptions'
 import { WebtoonCursor } from './WebtoonCursor'
 import { WEBTOON_BASE } from './utils'
 import { httpClient } from '../../httpClient/HttpClient'
@@ -30,7 +30,7 @@ const parseMangaUrl = (el: HTMLElement): string => {
 class WebtoonSearchCursor {
   private cursor: WebtoonCursor<Omit<ICrawlTarget, 'crawlTargetId'>>
 
-  constructor (opts: MangaSourceSearchOptions) {
+  constructor (opts: CrawlTargetSourceSearchOptions) {
     const url = new URL(`${WEBTOON_BASE}/en/search`)
     url.searchParams.set("page", opts.getObject().page.toString())
     url.searchParams.set("searchType", "WEBTOON")

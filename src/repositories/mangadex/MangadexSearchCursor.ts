@@ -2,14 +2,14 @@ import { httpClient } from '../../httpClient/HttpClient'
 import { CrawlerTypes, ICrawlTarget } from '../../models/crawlers/CrawlTarget'
 import { MANGADEX_API_BASE, MANGADEX_BASE } from './utils'
 import { MangadexCursor } from './MangadexCursor'
-import { MangaSourceSearchOptions } from '../../models/manga/MangaSourceSearchOptions'
+import { CrawlTargetSourceSearchOptions } from '../../models/crawlers/CrawlTargetSourceSearchOptions'
 import { IMangadexApiSearchManga, MangadexApiSearchResponse } from '../../models/mangadex/MangadexApiSearchResponse'
 
 class MangadexSearchCursor implements Cursor<Omit<ICrawlTarget, 'crawlTargetId'>> {
   private cursor: MangadexCursor<IMangadexApiSearchManga, MangadexApiSearchResponse, Omit<ICrawlTarget, 'crawlTargetId'>>
 
   // Given a url, provide an interface to retrieve chapters
-  constructor (opts: MangaSourceSearchOptions) {
+  constructor (opts: CrawlTargetSourceSearchOptions) {
     const LIMIT = 10
     this.cursor = new MangadexCursor({
       getter: async (limit, offset) => {

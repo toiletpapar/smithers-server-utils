@@ -6,7 +6,7 @@ import Bottleneck from 'bottleneck'
 import { MANGADEX_API_BASE, MANGADEX_BASE, getMangadexIdFromUrl } from './utils';
 import { MangadexApiCoverResponse } from '../../models/mangadex/MangadexApiCoverResponse';
 import { Image } from '../../models/image/Image';
-import { MangaSourceSearchOptions } from '../../models/manga/MangaSourceSearchOptions';
+import { CrawlTargetSourceSearchOptions } from '../../models/crawlers/CrawlTargetSourceSearchOptions';
 import { MangadexSearchCursor } from './MangadexSearchCursor';
 
 interface MangadexAdapterOptions {
@@ -38,7 +38,7 @@ namespace MangadexRepository {
     return chapters
   }
 
-  export const getSearchCursor = (opts: MangaSourceSearchOptions): MangadexSearchCursor => {
+  export const getSearchCursor = (opts: CrawlTargetSourceSearchOptions): MangadexSearchCursor => {
     return new MangadexSearchCursor(opts)
   }
 

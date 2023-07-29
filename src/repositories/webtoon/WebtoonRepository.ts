@@ -6,7 +6,7 @@ import { IMangaUpdate } from '../../models/manga/MangaUpdate'
 import { WebtoonChapterCursor } from "./WebtoonChapterCursor"
 import Bottleneck from 'bottleneck'
 import { WebtoonSearchCursor } from './WebtoonSearchCursor';
-import { MangaSourceSearchOptions } from '../../models/manga/MangaSourceSearchOptions';
+import { CrawlTargetSourceSearchOptions } from '../../models/crawlers/CrawlTargetSourceSearchOptions';
 
 interface WebtoonAdapterOptions {
   onlyLatest: boolean;
@@ -37,7 +37,7 @@ namespace WebtoonRepository {
     return chapters
   }
 
-  export const getSearchCursor = (opts: MangaSourceSearchOptions): WebtoonSearchCursor => {
+  export const getSearchCursor = (opts: CrawlTargetSourceSearchOptions): WebtoonSearchCursor => {
     return new WebtoonSearchCursor(opts)
   }
 

@@ -10,6 +10,8 @@ import { CrawlTarget } from "../../models/crawlers/CrawlTarget";
 import { CrawlTargetGetOptions } from "../../models/crawlers/CrawlTargetGetOptions";
 import { mangaSync } from "./mangaSync";
 import { SmithersError, SmithersErrorTypes } from "../../errors/SmithersError";
+import { CrawlTargetSourceSearchOptions } from "../../models/crawlers/CrawlTargetSourceSearchOptions";
+import { MangadexRepository } from "../mangadex/MangadexRepository";
 
 // Manga - Represented in SQL
 interface SQLManga {
