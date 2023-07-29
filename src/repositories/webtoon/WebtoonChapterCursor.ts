@@ -30,7 +30,7 @@ const parseChapterUrl = (el: HTMLElement): string => {
   return href
 }
 
-class WebtoonChapterCursor implements ChapterCursor {
+class WebtoonChapterCursor implements Cursor<Omit<IMangaUpdate, "mangaUpdateId">> {
   private cursor: WebtoonCursor<Omit<IMangaUpdate, "mangaUpdateId">>
   private crawlTarget: CrawlTarget
 
@@ -70,11 +70,11 @@ class WebtoonChapterCursor implements ChapterCursor {
     })
   }
 
-  hasMoreChapters(): boolean {
+  hasNext(): boolean {
     return this.cursor.hasNext()
   }
 
-  async nextChapters(): Promise<Omit<IMangaUpdate, "mangaUpdateId">[]> {
+  async next(): Promise<Omit<IMangaUpdate, "mangaUpdateId">[]> {
     return this.cursor.next()
   }
 }

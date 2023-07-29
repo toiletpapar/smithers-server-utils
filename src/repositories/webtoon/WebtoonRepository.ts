@@ -22,15 +22,15 @@ namespace WebtoonRepository {
     const cursor = getCursor(crawlTarget)
 
     if (opts.onlyLatest) {
-      return cursor.nextChapters()
+      return cursor.next()
     }
 
     let chapters: Omit<IMangaUpdate, "mangaUpdateId">[] = []
 
-    while (cursor.hasMoreChapters()) {
+    while (cursor.hasNext()) {
       chapters = [
         ...chapters,
-        ...await opts.limiter.schedule(() => cursor.nextChapters())
+        ...await opts.limiter.schedule(() => cursor.next())
       ]
     }
 

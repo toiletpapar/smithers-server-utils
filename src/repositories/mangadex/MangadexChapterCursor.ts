@@ -6,7 +6,7 @@ import { scaleRound } from '../../utils/float'
 import { MANGADEX_API_BASE, getMangadexIdFromUrl } from './utils'
 import { MangadexCursor } from './MangadexCursor'
 
-class MangadexChapterCursor implements ChapterCursor {
+class MangadexChapterCursor implements Cursor<Omit<IMangaUpdate, "mangaUpdateId">> {
   private cursor: MangadexCursor<IMangadexApiFeedChapter, MangadexApiFeedResponse, Omit<IMangaUpdate, "mangaUpdateId">>
 
   // Given a url, provide an interface to retrieve chapters
@@ -44,11 +44,11 @@ class MangadexChapterCursor implements ChapterCursor {
     })
   }
 
-  hasMoreChapters(): boolean {
+  hasNext(): boolean {
     return this.cursor.hasNext()
   }
 
-  async nextChapters(): Promise<Omit<IMangaUpdate, "mangaUpdateId">[]> {
+  async next(): Promise<Omit<IMangaUpdate, "mangaUpdateId">[]> {
     return this.cursor.next()
   }
 }

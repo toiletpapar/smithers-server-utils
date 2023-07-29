@@ -77,26 +77,26 @@ const _updateDb = async (
   }
 }
 
-const syncStrategy = async (db: Database, crawlTarget: CrawlTarget, cursor: ChapterCursor, sourceLimiter: Bottleneck, psqlLimiter: Bottleneck, onlyLatest: boolean, image: Image | null): Promise<void> => {
+const syncStrategy = async (db: Database, crawlTarget: CrawlTarget, cursor: Cursor<Omit<IMangaUpdate, "mangaUpdateId">>, sourceLimiter: Bottleneck, psqlLimiter: Bottleneck, onlyLatest: boolean, image: Image | null): Promise<void> => {
   console.log(`Now processing crawler ${crawlTarget.getObject().name}`)
   let chapterUpdates: Promise<void>[] = []
 
   const getAndUpdateChapters = async (): Promise<Promise<void>[]> => {
     console.log(`Crawled and updated a set of chapters from ${crawlTarget.getObject().name}...`)
-    const chapters = await sourceLimiter.schedule(() => cursor.nextChapters())
+    const chapters = await sourceLimiter.schedule(() => cursor.next())
 
     return chapters.map((chapter): Promise<void> => {
       return _updateDb(db, psqlLimiter, crawlTarget, chapter)
     })
   }
 
-  if (onlyLatest && cursor.hasMoreChapters()) {
+  if (onlyLatest && cursor.hasNext()) {
     chapterUpdates = [
       ...chapterUpdates,
       ...await getAndUpdateChapters()
     ]
   } else {
-    while (cursor.hasMoreChapters()) {
+    while (cursor.hasNext()) {
       chapterUpdates = [
         ...chapterUpdates,
         ...await getAndUpdateChapters()
