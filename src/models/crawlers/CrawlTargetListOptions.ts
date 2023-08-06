@@ -1,18 +1,21 @@
-import { object, number, array, string } from 'yup'
+import { object, number, array, string, boolean } from 'yup'
+import { decodeBoolean } from '../../utils/decodeQuery';
 
 interface ICrawlTargetListOptions {
   userId?: number;
   crawlTargetId?: number;
+  projectImage?: boolean;
 }
 
 class CrawlTargetListOptions {
   private data: ICrawlTargetListOptions;
   private static requestSchema = object({
     userId: number().required(),
-    crawlTargetId: number().optional()
+    crawlTargetId: number().optional(),
+    projectImage: string().oneOf(['true', 'false']).optional(),
   }).noUnknown().defined("Data must be defined")
 
-  static allRequestProperties: (keyof ICrawlTargetListOptions)[] = ['userId', 'crawlTargetId']
+  static allRequestProperties: (keyof ICrawlTargetListOptions)[] = ['userId', 'crawlTargetId', 'projectImage']
   private static getPropertiesRequestSchema(validProperties: (keyof ICrawlTargetListOptions)[]) {
     return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
   }
@@ -26,7 +29,8 @@ class CrawlTargetListOptions {
 
     return new this({
       userId: result.userId,
-      crawlTargetId: result.crawlTargetId
+      crawlTargetId: result.crawlTargetId,
+      projectImage: result.projectImage
     })
   }
 
@@ -43,8 +47,19 @@ class CrawlTargetListOptions {
     // Validate the data against the specified properties, erroring on any unidentified properties
     const validationSchema = this.requestSchema.pick(validatedProperties).strict(strict)
     const validatedData = await validationSchema.validate(data, {abortEarly: false})
+    const coercedData: Partial<ICrawlTargetListOptions> = {}
 
-    return validatedData
+    // coerce data types
+    if (validatedData.projectImage) {
+      coercedData.projectImage = decodeBoolean(validatedData.projectImage)
+    } else {
+      coercedData.projectImage = false
+    }
+
+    return {
+      ...validatedData as any,
+      ...coercedData
+    }
   }
 
   public getObject(): ICrawlTargetListOptions {

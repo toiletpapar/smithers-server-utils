@@ -1,12 +1,12 @@
 import { QueryResult } from 'pg'
-import { Database, DatabaseQueryable } from '../database/Database'
-import { CrawlTarget, CrawlerTypes, ICrawlTarget, ImageTypes } from '../models/crawlers/CrawlTarget'
-import { CrawlTargetListOptions, ICrawlTargetListOptions } from '../models/crawlers/CrawlTargetListOptions';
-import { CrawlTargetGetOptions } from '../models/crawlers/CrawlTargetGetOptions';
-import { SmithersError, SmithersErrorTypes } from '../errors/SmithersError';
-import { CrawlTargetSourceSearchOptions } from '../models/crawlers/CrawlTargetSourceSearchOptions';
-import { MangadexRepository } from './mangadex/MangadexRepository';
-import { WebtoonRepository } from './webtoon/WebtoonRepository';
+import { Database, DatabaseQueryable } from '../../database/Database'
+import { CrawlTarget, CrawlerTypes, ICrawlTarget, ImageTypes } from '../../models/crawlers/CrawlTarget'
+import { CrawlTargetListOptions, ICrawlTargetListOptions } from '../../models/crawlers/CrawlTargetListOptions';
+import { CrawlTargetGetOptions } from '../../models/crawlers/CrawlTargetGetOptions';
+import { SmithersError, SmithersErrorTypes } from '../../errors/SmithersError';
+import { CrawlTargetSourceSearchOptions } from '../../models/crawlers/CrawlTargetSourceSearchOptions';
+import { MangadexRepository } from '../mangadex/MangadexRepository';
+import { WebtoonRepository } from '../webtoon/WebtoonRepository';
 
 interface SQLCrawlTarget {
   crawl_target_id: number;
@@ -73,8 +73,23 @@ namespace CrawlTargetRepository {
   export const list = async(db: DatabaseQueryable, opts: CrawlTargetListOptions): Promise<CrawlTarget[]> => {
     const optsData = opts.getObject()
     let values: any[] = []
+    let projection: string = ''
     let where = ''
 
+    // Projection
+    let properties = CrawlTarget.allRequestProperties
+
+    if (!optsData.projectImage) {
+      properties = properties.filter((property) => {
+        return property !== 'coverFormat' && property !== 'coverImage'
+      })
+    }
+
+    projection = properties.reduce((acc: string, property) => {
+      return `${acc}${getSQLKey(property)}, `
+    }, '').slice(0, -2)
+
+    // Filter
     if (optsData.userId) {
       values = [
         ...values,
@@ -101,8 +116,9 @@ namespace CrawlTargetRepository {
       }
     }
 
+    // Query
     const result: QueryResult<SQLCrawlTarget> = await db.query({
-      text: `SELECT * FROM crawl_target${where};`,
+      text: `SELECT ${projection} FROM crawl_target${where};`,
       values
     })
   
@@ -121,6 +137,13 @@ namespace CrawlTargetRepository {
       listOptions = {
         ...listOptions,
         userId: optsData.userId
+      }
+    }
+
+    if (optsData.projectImage) {
+      listOptions = {
+        ...listOptions,
+        projectImage: optsData.projectImage
       }
     }
 

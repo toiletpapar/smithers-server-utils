@@ -1,4 +1,4 @@
-import { CrawlTargetRepository, SQLCrawlTarget } from "../CrawlTargetRepository"
+import { CrawlTargetRepository, SQLCrawlTarget } from "../crawlers/CrawlTargetRepository"
 import { MangaUpdateRepository, SQLMangaUpdate } from "./MangaUpdateRepository"
 import { Database } from "../../database/Database"
 import { CrawlTarget, CrawlerTypes, ICrawlTarget } from "../../models/crawlers/CrawlTarget";

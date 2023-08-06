@@ -1,4 +1,7 @@
-import { ImageTypes } from "../crawlers/CrawlTarget";
+enum ImageTypes {
+  png = 'png',
+  jpeg = 'jpeg'
+}
 
 interface IImage {
   format: ImageTypes;
@@ -21,4 +24,6 @@ class Image {
 
 export {
   Image,
+  IImage,
+  ImageTypes
 }

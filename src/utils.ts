@@ -3,7 +3,7 @@ import { SecretClient } from "./secrets/SecretClient"
 
 import { CrawlTarget, CrawlerTypes, ICrawlTarget } from "./models/crawlers/CrawlTarget"
 import { CrawlTargetListOptions, ICrawlTargetListOptions } from "./models/crawlers/CrawlTargetListOptions"
-import { SQLCrawlTarget, CrawlTargetRepository } from "./repositories/CrawlTargetRepository"
+import { SQLCrawlTarget, CrawlTargetRepository } from "./repositories/crawlers/CrawlTargetRepository"
 
 import { MangaUpdate, IMangaUpdate } from "./models/manga/MangaUpdate"
 import { MangaUpdateListOptions, IMangaUpdateListOptions } from "./models/manga/MangaUpdateListOptions"

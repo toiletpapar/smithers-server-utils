@@ -1,17 +1,13 @@
 import { object, string, boolean, number, mixed, array } from 'yup'
 import { isISO8601 } from '../../utils/isISO8601'
-import { SQLCrawlTarget } from '../../repositories/CrawlTargetRepository'
+import { SQLCrawlTarget } from '../../repositories/crawlers/CrawlTargetRepository'
 import zlib from 'zlib'
 import util from 'util'
+import { ImageTypes } from '../image/Image'
 
 enum CrawlerTypes {
   webtoon = 'webtoon',
   mangadex = 'mangadex'
-}
-
-enum ImageTypes {
-  png = 'png',
-  jpeg = 'jpeg'
 }
 
 interface ICrawlTarget {
@@ -42,8 +38,8 @@ class CrawlTarget {
     favourite: boolean().required()
   }).noUnknown().defined("Data must be defined")
 
-  static allRequestProperties: (keyof ICrawlTarget)[] = ['crawlTargetId', 'name', 'url', 'adapter', 'lastCrawledOn', 'crawlSuccess', 'userId', 'favourite']
-  private static getPropertiesRequestSchema(validProperties: (keyof ICrawlTarget)[]) {
+  static allRequestProperties: (keyof ICrawlTarget)[] = ['crawlTargetId', 'name', 'url', 'adapter', 'lastCrawledOn', 'crawlSuccess', 'userId', 'coverImage',  'coverFormat', 'favourite']
+  static getPropertiesRequestSchema(validProperties: (keyof ICrawlTarget)[]) {
     return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
   }
 
@@ -61,7 +57,7 @@ class CrawlTarget {
       crawlSuccess: data.crawl_success,
       userId: data.user_id,
       coverImage: data.cover_image ? Buffer.from(data.cover_image, 'hex') : null,
-      coverFormat: data.cover_format,
+      coverFormat: data.cover_format ? data.cover_format : null,
       favourite: data.favourite
     })
   }

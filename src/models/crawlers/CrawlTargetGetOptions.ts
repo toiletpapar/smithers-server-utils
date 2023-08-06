@@ -1,18 +1,21 @@
-import { object, number, array, string } from 'yup'
+import { object, number, array, string, boolean } from 'yup'
+import { decodeBoolean } from '../../utils/decodeQuery';
 
 interface ICrawlTargetGetOptions {
   userId?: number;
   crawlTargetId: number;
+  projectImage?: boolean;
 }
 
 class CrawlTargetGetOptions {
   private data: ICrawlTargetGetOptions;
   private static requestSchema = object({
     userId: number().required(),
-    crawlTargetId: number().required()
+    crawlTargetId: number().required(),
+    projectImage: string().oneOf(['true', 'false']).optional(),
   }).noUnknown().defined("Data must be defined")
 
-  static allRequestProperties: (keyof ICrawlTargetGetOptions)[] = ['userId', 'crawlTargetId']
+  static allRequestProperties: (keyof ICrawlTargetGetOptions)[] = ['userId', 'crawlTargetId', 'projectImage']
   private static getPropertiesRequestSchema(validProperties: (keyof ICrawlTargetGetOptions)[]) {
     return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
   }
@@ -26,7 +29,8 @@ class CrawlTargetGetOptions {
 
     return new this({
       userId: result.userId,
-      crawlTargetId: result.crawlTargetId
+      crawlTargetId: result.crawlTargetId,
+      projectImage: result.projectImage
     })
   }
 
@@ -43,8 +47,19 @@ class CrawlTargetGetOptions {
     // Validate the data against the specified properties, erroring on any unidentified properties
     const validationSchema = this.requestSchema.pick(validatedProperties).strict(strict)
     const validatedData = await validationSchema.validate(data, {abortEarly: false})
+    const coercedData: Partial<ICrawlTargetGetOptions> = {}
 
-    return validatedData
+    // coerce data types
+    if (validatedData.projectImage) {
+      coercedData.projectImage = decodeBoolean(validatedData.projectImage)
+    } else {
+      coercedData.projectImage = false
+    }
+
+    return {
+      ...validatedData as any,
+      ...coercedData
+    }
   }
 
   public getObject(): ICrawlTargetGetOptions {

@@ -1,5 +1,5 @@
 import { QueryResult } from "pg";
-import { CrawlTargetRepository, SQLCrawlTarget } from "../CrawlTargetRepository"
+import { CrawlTargetRepository, SQLCrawlTarget } from "../crawlers/CrawlTargetRepository"
 import { SQLMangaUpdate } from "./MangaUpdateRepository"
 import { Database, DatabaseQueryable } from "../../database/Database"
 import { Manga } from "../../models/manga/Manga"
