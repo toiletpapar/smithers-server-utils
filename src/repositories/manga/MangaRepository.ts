@@ -15,7 +15,8 @@ import { MangadexRepository } from "../mangadex/MangadexRepository";
 
 // Manga - Represented in SQL
 interface SQLManga {
-  crawler: SQLCrawlTarget;
+  // We convert cover_image into a string when we build the json object in our aggregation
+  crawler: Omit<SQLCrawlTarget, 'cover_image' | 'last_crawled_on'> & {cover_image: string | null, last_crawled_on: string | null};
   manga_updates: SQLMangaUpdate[];
 }
 
@@ -36,8 +37,17 @@ namespace MangaRepository {
             'last_crawled_on', last_crawled_on,
             'crawl_success', crawl_success,
             'user_id', user_id,
-            'cover_image', encode(cover_image::bytea, 'hex'),
-            'cover_format', cover_format,
+            ${
+              opts.getObject().projectImage ?
+              `
+                'cover_image', encode(cover_image::bytea, 'hex'),
+                'cover_format', cover_format,
+              ` :
+              `
+                'cover_image', null,
+                'cover_format', null,
+              `
+            }
             'favourite', favourite
           ) crawler,
           COALESCE(
@@ -72,21 +82,7 @@ namespace MangaRepository {
     })
 
     return results.rows.map((row) => {
-      return Manga.fromSQL({
-        ...row,
-        crawler: {
-          ...row.crawler,
-          // Transform data types that aren't supported in JSON to their proper SQL representation
-          last_crawled_on: row.crawler.last_crawled_on ? new Date(row.crawler.last_crawled_on) : row.crawler.last_crawled_on
-        },
-        manga_updates: row.manga_updates.map((update) => {
-          return {
-            ...update,
-            crawled_on: new Date(update.crawled_on),
-            date_created: new Date(update.date_created)
-          }
-        })
-      })
+      return Manga.fromSQL(row)
     })
   }
 

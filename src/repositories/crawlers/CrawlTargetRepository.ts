@@ -16,7 +16,7 @@ interface SQLCrawlTarget {
   last_crawled_on: Date | null;
   crawl_success: boolean | null;
   user_id: number;
-  cover_image: string | null;
+  cover_image: Buffer | null;
   cover_format: ImageTypes | null;
   favourite: boolean;
 }
@@ -166,7 +166,7 @@ namespace CrawlTargetRepository {
         crawlTarget.lastCrawledOn,
         crawlTarget.crawlSuccess,
         crawlTarget.userId,
-        crawlTarget.coverImage ? crawlTarget.coverImage.toString('hex') : null,
+        crawlTarget.coverImage,
         crawlTarget.coverFormat,
         crawlTarget.favourite
       ]
@@ -188,12 +188,6 @@ namespace CrawlTargetRepository {
     }
 
     let values = [...entries.map(([key, value]) => {
-      const sqlKey = getSQLKey(key as keyof ICrawlTarget)
-
-      if (sqlKey === 'cover_image') {
-        return value ? value.toString('hex') : null
-      }
-
       return value
     }), crawlTargetId]
 

@@ -4,16 +4,18 @@ import { decodeBoolean } from '../../utils/decodeQuery';
 interface IMangaListOptions {
   onlyLatest: boolean;
   userId: number;
+  projectImage?: boolean;
 }
 
 class MangaListOptions {
   private data: IMangaListOptions;
   private static requestSchema = object({
     onlyLatest: string().oneOf(['true', 'false']).optional(),
-    userId: number().required()
+    userId: number().required(),
+    projectImage: string().oneOf(['true', 'false']).optional(),
   }).noUnknown().defined("Data must be defined")
 
-  static allRequestProperties: (keyof IMangaListOptions)[] = ['onlyLatest', 'userId']
+  static allRequestProperties: (keyof IMangaListOptions)[] = ['onlyLatest', 'userId', 'projectImage']
   private static getPropertiesRequestSchema(validProperties: (keyof IMangaListOptions)[]) {
     return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
   }
@@ -27,7 +29,8 @@ class MangaListOptions {
 
     return new this({
       onlyLatest: result.onlyLatest,
-      userId: result.userId
+      userId: result.userId,
+      projectImage: result.projectImage
     })
   }
 
@@ -51,6 +54,12 @@ class MangaListOptions {
       coercedData.onlyLatest = decodeBoolean(validatedData.onlyLatest)
     } else {
       coercedData.onlyLatest = true
+    }
+
+    if (validatedData.projectImage) {
+      coercedData.projectImage = decodeBoolean(validatedData.projectImage)
+    } else {
+      coercedData.projectImage = false
     }
 
     return {

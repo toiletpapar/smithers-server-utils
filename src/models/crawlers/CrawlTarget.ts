@@ -56,7 +56,7 @@ class CrawlTarget {
       lastCrawledOn: data.last_crawled_on,
       crawlSuccess: data.crawl_success,
       userId: data.user_id,
-      coverImage: data.cover_image ? Buffer.from(data.cover_image, 'hex') : null,
+      coverImage: data.cover_image ? data.cover_image : null,
       coverFormat: data.cover_format ? data.cover_format : null,
       favourite: data.favourite
     })
@@ -111,18 +111,9 @@ class CrawlTarget {
   }
 
   public async serialize() {
-    let zipImage = null
-    if (this.data.coverImage) {
-      zipImage = await util.promisify(zlib.gzip)(this.data.coverImage)
-    }
-
     return {
       ...this.data,
       lastCrawledOn: this.data.lastCrawledOn ? this.data.lastCrawledOn.toISOString() : this.data.lastCrawledOn,
-      // TODO: Consider removing image from standard query, only allow to retrieve through streamable interface
-      // This allows us to send binary through stream instead of base64 in one json payload
-      // It also reduces the amount of RAM used when reading these objects for purposes other than the image
-      coverImage: zipImage?.toString('base64') || null,
     }
   }
 } 
