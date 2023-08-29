@@ -24,7 +24,7 @@ const parseMangaUrl = (el: HTMLElement): string => {
     throw new SmithersError(SmithersErrorTypes.WEBTOON_CURSOR_UNPARSABLE_MANGA_URL, 'Unable to parse manga url')
   }
 
-  return WEBTOON_BASE + url
+  return url
 }
 
 class WebtoonSearchCursor {
