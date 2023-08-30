@@ -62,6 +62,11 @@ namespace WebtoonRepository {
         format: ImageTypes.png,
         data: Buffer.from(coverImageRes.data)
       })
+    } else if (coverImageRes.headers['content-type'] === "image/jpeg") {
+      return new Image({
+        format: ImageTypes.jpeg,
+        data: Buffer.from(coverImageRes.data)
+      })
     } else {
       throw new Error(`Unrecognized mime type: ${coverImageRes.headers['Content-Type']}`)
     }

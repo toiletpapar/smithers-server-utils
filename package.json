@@ -1,6 +1,6 @@
 {
   "name": "@ca-tyler/smithers-server-utils",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "description": "Common Utilities used across the Smithers Application",
   "main": "./build/utils.js",
   "scripts": {
