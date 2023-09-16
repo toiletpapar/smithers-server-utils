@@ -17,6 +17,8 @@ import { CrawlTargetGetOptions, ICrawlTargetGetOptions } from "./models/crawlers
 import { SmithersError, SmithersErrorTypes } from "./errors/SmithersError"
 import { IMangaUpdateGetOptions, MangaUpdateGetOptions } from "./models/manga/MangaUpdateGetOptions"
 import { CrawlTargetGetImageOptions, ICrawlTargetGetImageOptions } from "./models/crawlers/CrawlTargetGetImageOptions"
+import { LogRepository } from "./repositories/log/LogRepository"
+import { Log, LogTypes } from "./models/log/Log"
 
 export {
   Database,
@@ -56,5 +58,10 @@ export {
   MangaSyncOptions,
   IMangaSyncOptions,
   SQLManga,
-  MangaRepository
+  MangaRepository,
+
+  // Log
+  LogRepository,
+  Log,
+  LogTypes
 }
