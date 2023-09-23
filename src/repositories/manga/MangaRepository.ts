@@ -15,8 +15,8 @@ import { MangadexRepository } from "../mangadex/MangadexRepository";
 
 // Manga - Represented in SQL
 interface SQLManga {
-  // We convert cover_image into a string when we build the json object in our aggregation
-  crawler: Omit<SQLCrawlTarget, 'cover_image' | 'last_crawled_on'> & {cover_image: string | null, last_crawled_on: string | null};
+  // We convert cover_image, cover_signature into a string when we build the json object in our aggregation
+  crawler: Omit<SQLCrawlTarget, 'cover_image' | 'cover_signature' | 'last_crawled_on'> & {cover_image: string | null, cover_signature: string | null, last_crawled_on: string | null};
   manga_updates: SQLMangaUpdate[];
 }
 
@@ -37,6 +37,7 @@ namespace MangaRepository {
             'last_crawled_on', last_crawled_on,
             'crawl_success', crawl_success,
             'user_id', user_id,
+            'cover_signature', encode(cover_signature::bytea, 'hex'),
             ${
               opts.getObject().projectImage ?
               `
@@ -75,7 +76,7 @@ namespace MangaRepository {
           ORDER BY crawl_target_id ASC, chapter DESC
         ) x
         ${opts.getObject().onlyLatest ? 'WHERE _rn = 1' : ''}
-        GROUP BY crawl_target_id, name, url, adapter, last_crawled_on, crawl_success, user_id, cover_image, cover_format, favourite
+        GROUP BY crawl_target_id, name, url, adapter, last_crawled_on, crawl_success, user_id, cover_image, cover_format, cover_signature, favourite
         ORDER BY favourite DESC, MAX(date_created) DESC NULLS LAST;
       `,
       values: [opts.getObject().userId]

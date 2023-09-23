@@ -27,7 +27,8 @@ class Manga {
       crawler: CrawlTarget.fromSQL({
         ...data.crawler,
         last_crawled_on: data.crawler.last_crawled_on !== null ? new Date(data.crawler.last_crawled_on) : data.crawler.last_crawled_on,
-        cover_image: data.crawler.cover_image !== null ? Buffer.from(data.crawler.cover_image, 'hex') : data.crawler.cover_image
+        cover_image: data.crawler.cover_image !== null ? Buffer.from(data.crawler.cover_image, 'hex') : data.crawler.cover_image,
+        cover_signature: data.crawler.cover_signature !== null ? Buffer.from(data.crawler.cover_signature, 'hex') : data.crawler.cover_signature
       }),
       mangaUpdates: data.manga_updates.map((update) => MangaUpdate.fromSQL({
         ...update,

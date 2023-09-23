@@ -18,6 +18,7 @@ interface SQLCrawlTarget {
   user_id: number;
   cover_image: Buffer | null;
   cover_format: ImageTypes | null;
+  cover_signature: Buffer | null;
   favourite: boolean;
 }
 
@@ -42,6 +43,8 @@ namespace CrawlTargetRepository {
         return 'cover_image'
       case 'coverFormat':
         return 'cover_format'
+      case 'coverSignature':
+        return 'cover_signature'
       case 'favourite':
         return 'favourite'
       default: {
@@ -158,7 +161,7 @@ namespace CrawlTargetRepository {
   
   export const insert = async (db: DatabaseQueryable, crawlTarget: Omit<ICrawlTarget, 'crawlTargetId'>): Promise<CrawlTarget> => {
     const result: QueryResult<SQLCrawlTarget> = await db.query({
-      text: 'INSERT INTO crawl_target (name, url, adapter, last_crawled_on, crawl_success, user_id, cover_image, cover_format, favourite) VALUES ($1, $2, $3, $4, $5, $6, $7::bytea, $8, $9) RETURNING *;',
+      text: 'INSERT INTO crawl_target (name, url, adapter, last_crawled_on, crawl_success, user_id, cover_image, cover_format, cover_signature, favourite) VALUES ($1, $2, $3, $4, $5, $6, $7::bytea, $8, $9::bytea, $10) RETURNING *;',
       values: [
         crawlTarget.name,
         crawlTarget.url,
@@ -168,6 +171,7 @@ namespace CrawlTargetRepository {
         crawlTarget.userId,
         crawlTarget.coverImage,
         crawlTarget.coverFormat,
+        crawlTarget.coverSignature,
         crawlTarget.favourite
       ]
     })
@@ -207,7 +211,7 @@ namespace CrawlTargetRepository {
               let updateSql = ''
               const sqlKey = getSQLKey(key as keyof ICrawlTarget)
 
-              if (sqlKey === 'cover_image') {
+              if (sqlKey === 'cover_image' || sqlKey === 'cover_signature') {
                 updateSql = `${sqlKey}=$${index+1}::bytea`
               } else {
                 updateSql = `${sqlKey}=$${index+1}`

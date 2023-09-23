@@ -20,6 +20,7 @@ interface ICrawlTarget {
   userId: number; // the identifier of the owner of this target
   coverImage: Buffer | null; // the manga cover's image data
   coverFormat: ImageTypes | null; // the format of the cover image data
+  coverSignature: Buffer | null; // The SHA-256 hash of the image
   favourite: boolean;
 }
 
@@ -35,10 +36,11 @@ class CrawlTarget {
     userId: number().required(),
     coverImage: mixed<Buffer>().defined().nullable().test('is-buffer', 'Value must be a Buffer', (input) => input === null || Buffer.isBuffer(input)),
     coverFormat: mixed<ImageTypes>().oneOf(Object.values(ImageTypes)).required(),
+    coverSignature: mixed<Buffer>().defined().nullable().test('is-buffer', 'Value must be a Buffer', (input) => input === null || Buffer.isBuffer(input)),
     favourite: boolean().required()
   }).noUnknown().defined("Data must be defined")
 
-  static allRequestProperties: (keyof ICrawlTarget)[] = ['crawlTargetId', 'name', 'url', 'adapter', 'lastCrawledOn', 'crawlSuccess', 'userId', 'coverImage',  'coverFormat', 'favourite']
+  static allRequestProperties: (keyof ICrawlTarget)[] = ['crawlTargetId', 'name', 'url', 'adapter', 'lastCrawledOn', 'crawlSuccess', 'userId', 'coverImage',  'coverFormat', 'coverSignature', 'favourite']
   static getPropertiesRequestSchema(validProperties: (keyof ICrawlTarget)[]) {
     return array().of(string().oneOf(validProperties).defined()).defined("Properties must be defined").min(1, "Properties must contain elements").strict(true)
   }
@@ -58,6 +60,7 @@ class CrawlTarget {
       userId: data.user_id,
       coverImage: data.cover_image ? data.cover_image : null,
       coverFormat: data.cover_format ? data.cover_format : null,
+      coverSignature: data.cover_signature ? data.cover_signature : null,
       favourite: data.favourite
     })
   }
@@ -75,6 +78,7 @@ class CrawlTarget {
       userId: result.userId,
       coverImage: result.coverImage,
       coverFormat: result.coverFormat,
+      coverSignature: result.coverSignature,
       favourite: result.favourite
     })
   }
@@ -114,6 +118,8 @@ class CrawlTarget {
     return {
       ...this.data,
       lastCrawledOn: this.data.lastCrawledOn ? this.data.lastCrawledOn.toISOString() : this.data.lastCrawledOn,
+      coverImage: this.data.coverImage ? this.data.coverImage.toString('base64') : this.data.coverImage,
+      coverSignature: this.data.coverSignature ? this.data.coverSignature.toString('hex') : this.data.coverSignature
     }
   }
 } 

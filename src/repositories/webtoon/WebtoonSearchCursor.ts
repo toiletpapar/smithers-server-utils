@@ -54,6 +54,7 @@ class WebtoonSearchCursor {
             userId: opts.getObject().userId,
             coverImage: null,
             coverFormat: null,
+            coverSignature: null,
             favourite: false,
           }
         })

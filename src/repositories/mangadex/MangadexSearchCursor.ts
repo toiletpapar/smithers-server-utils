@@ -36,6 +36,7 @@ class MangadexSearchCursor implements Cursor<Omit<ICrawlTarget, 'crawlTargetId'>
           userId: opts.getObject().userId,
           coverImage: null,
           coverFormat: null,
+          coverSignature: null,
           favourite: false,
         }
       },

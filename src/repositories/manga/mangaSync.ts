@@ -1,18 +1,15 @@
-import { CrawlTargetRepository, SQLCrawlTarget } from "../crawlers/CrawlTargetRepository"
-import { MangaUpdateRepository, SQLMangaUpdate } from "./MangaUpdateRepository"
+import { CrawlTargetRepository } from "../crawlers/CrawlTargetRepository"
+import { MangaUpdateRepository } from "./MangaUpdateRepository"
 import { Database } from "../../database/Database"
-import { CrawlTarget, CrawlerTypes, ICrawlTarget } from "../../models/crawlers/CrawlTarget";
-import { WebtoonRepository } from "../webtoon/WebtoonRepository";
-import { MangadexRepository } from "../mangadex/MangadexRepository";
-import { IMangaUpdate, MangaUpdate } from "../../models/manga/MangaUpdate";
-import { scaleEquals } from "../../utils/float";
-import Bottleneck from "bottleneck";
-import { MangaUpdateListOptions } from "../../models/manga/MangaUpdateListOptions";
-import { SmithersError, SmithersErrorTypes } from "../../errors/SmithersError";
-import { MangadexChapterCursor } from "../mangadex/MangadexChapterCursor";
-import { WebtoonChapterCursor } from "../webtoon/WebtoonChapterCursor";
-import { MangaUpdateGetOptions } from "../../models/manga/MangaUpdateGetOptions";
-import { Image } from "../../models/image/Image";
+import { CrawlTarget, CrawlerTypes, ICrawlTarget } from "../../models/crawlers/CrawlTarget"
+import { WebtoonRepository } from "../webtoon/WebtoonRepository"
+import { MangadexRepository } from "../mangadex/MangadexRepository"
+import { IMangaUpdate, MangaUpdate } from "../../models/manga/MangaUpdate"
+import Bottleneck from "bottleneck"
+import { SmithersError, SmithersErrorTypes } from "../../errors/SmithersError"
+import { MangaUpdateGetOptions } from "../../models/manga/MangaUpdateGetOptions"
+import { Image } from "../../models/image/Image"
+import { createHash } from 'node:crypto'
 
 const _getUpdateObject = (dbUpdate: MangaUpdate, update: Omit<IMangaUpdate, 'mangaUpdateId'>): Partial<Pick<IMangaUpdate, 'crawledOn' | 'chapterName' | 'readAt'>> => {
   const data = dbUpdate.getObject()
@@ -114,10 +111,15 @@ const syncStrategy = async (db: Database, crawlTarget: CrawlTarget, cursor: Curs
   }
 
   if (image) {
+    // Create a cover signature used to invalidate the image in caches
+    const hash = createHash('sha256')
+    hash.update(image.getObject().data)
+
     crawlerUpdate = {
       ...crawlerUpdate,
       coverFormat: image.getObject().format,
-      coverImage: image.getObject().data
+      coverImage: image.getObject().data,
+      coverSignature: hash.digest()
     }
   }
 
