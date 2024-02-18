@@ -1,5 +1,5 @@
 import { QueryResult } from 'pg'
-import { Database, DatabaseQueryable } from '../../database/Database'
+import { DatabaseQueryable } from '../../database/Database'
 import { CrawlTarget, CrawlerTypes, ICrawlTarget, ImageTypes } from '../../models/crawlers/CrawlTarget'
 import { CrawlTargetListOptions, ICrawlTargetListOptions } from '../../models/crawlers/CrawlTargetListOptions';
 import { CrawlTargetGetOptions } from '../../models/crawlers/CrawlTargetGetOptions';

@@ -1,5 +1,5 @@
 import { QueryResult } from 'pg'
-import { Database, DatabaseQueryable } from '../../database/Database'
+import {  DatabaseQueryable } from '../../database/Database'
 import { IMangaUpdate, MangaUpdate } from '../../models/manga/MangaUpdate';
 import { IMangaUpdateListOptions, MangaUpdateListOptions } from '../../models/manga/MangaUpdateListOptions';
 import { SmithersError, SmithersErrorTypes } from '../../errors/SmithersError';
