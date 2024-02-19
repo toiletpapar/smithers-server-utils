@@ -1,5 +1,7 @@
 // TODO: Refactor DB to parent package: used in smithers-server && smithers-crawler
 import { Pool, PoolClient, PoolConfig, QueryConfig, QueryResult, QueryResultRow } from 'pg'
+import { Mutex } from 'async-mutex'
+import { SmithersError, SmithersErrorTypes } from '../errors/SmithersError'
 
 interface DatabaseQueryable {
   query: <T extends QueryResultRow>(query: string | QueryConfig) => Promise<QueryResult<T>>
@@ -24,8 +26,9 @@ class DatabaseClient implements DatabaseQueryable {
 
 // Manage a single instance of a pool
 class Database implements DatabaseQueryable {
-  private pool: Pool;
-  private static db: Database | null = null;
+  private pool: Pool
+  private static db: Database | null = null
+  private static mutex = new Mutex()
 
   constructor(config: PoolConfig) {
     if (Database.db) {
@@ -33,7 +36,27 @@ class Database implements DatabaseQueryable {
     }
 
     this.pool = new Pool(config)
-    Database.db = this
+  }
+
+  public static async getInstance(): Promise<Database> {
+    if (!process.env.DATABASE_CONNECTION_STRING) {
+      throw new SmithersError(SmithersErrorTypes.DB_CONNECTION_NOT_FOUND, 'DB secret name not provided')
+    }
+
+    if (!Database.db) {
+      const release = await Database.mutex.acquire()
+      try {
+        if (!Database.db) {
+          Database.db = new Database({
+            connectionString: process.env.DATABASE_CONNECTION_STRING
+          })
+        }
+      } finally {
+        release();
+      }
+    }
+
+    return Database.db
   }
 
   // Query any available client
